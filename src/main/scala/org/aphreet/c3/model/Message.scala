@@ -9,7 +9,7 @@ import java.util
  * @author Dmitry Ivanov
  */
 
-case class Message(groupId: String, authorId: String, creationDate: util.Date, content: String, tags: List[String] = List()) {
+case class Message(groupId: String, authorId: String, creationDate: util.Date, content: String, uuid: String, tags: List[String] = List()) {
   lazy val author: Box[User] = User.find(authorId)
   lazy val group: Box[Group] = Group.find(groupId)
 
@@ -25,5 +25,6 @@ case class Message(groupId: String, authorId: String, creationDate: util.Date, c
   }
 }
 object Message {
-  def apply(groupId: String, authorId: String, content: String, tags: List[String]) = new Message(groupId, authorId, TimeHelpers.now, content, tags)
+  def apply(groupId: String, authorId: String, content: String, uuid: String, tags: List[String]) =
+    new Message(groupId, authorId, TimeHelpers.now, content, uuid, tags)
 }

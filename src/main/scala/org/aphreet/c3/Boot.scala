@@ -53,7 +53,7 @@ class Boot extends Bootable{
     // where to search snippets
     sections.foreach(s => LiftRules.addToPackages(s.currentPackage))
 
-    Schemifier.schemify(true, Schemifier.infoF _, User, Group, Category, Tag, UserGroup, Notification)
+    DBSetup.setup()
 
     lazy val loginUrl = "/user_mgt/login"
 

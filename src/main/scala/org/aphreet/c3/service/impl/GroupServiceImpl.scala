@@ -4,14 +4,56 @@ import org.aphreet.c3.service.{AddedToGroupMsg, CreateNotification, Notification
 import com.ifunsoftware.c3.access.C3System
 import org.aphreet.c3.lib.DependencyFactory._
 import com.ifunsoftware.c3.access.fs.{C3File, C3Directory}
-import org.aphreet.c3.util.C3Exception
+import org.aphreet.c3.util.{C3Loggable, C3Exception}
 import org.aphreet.c3.model.{UserGroup, Group, User}
+import net.liftweb.common.{Full, Empty, Failure, Box}
+import net.liftweb.mapper.By
 
-class GroupServiceImpl extends GroupService{
+class GroupServiceImpl extends GroupService with C3Loggable{
 
   lazy val c3 = inject[C3System].open_!
 
-  def createGroupMapping(groupId: String){
+  override def createGroup(newGroup: Group, members: Iterable[User]): Box[Group] = {
+    val group = newGroup.saveMe()
+    try {
+      createGroupMapping(group.id.is.toString)
+    } catch {
+      case e: C3Exception => {
+        group.delete_! // rollback
+        Failure("Couldn't create group C3 FS mapping", Full(e), Empty)
+      }
+    }
+    group.owner.foreach(owner => UserGroup.join(owner, group))
+    addUsersToGroup(group,members)
+    Full(group)
+  }
+
+  override def removeGroup(group: Group): Boolean = {
+    try {
+      removeGroupMapping(group.id.is.toString)
+    } catch {
+      case e: C3Exception => {
+        logger.error("Error while removing group mapping from C3: " + e.getMessage, e)
+        false
+      }
+    }
+
+    group.delete_!
+  }
+
+  override def addUsersToGroup(group: Group, members: Iterable[User]): Iterable[Box[User]] = {
+    for {
+      member <- members
+    } yield {
+      if (UserGroup.find(By(UserGroup.user, member), By(UserGroup.group, group)).isEmpty){
+        UserGroup.join(member, group)
+        NotificationManager ! CreateNotification(AddedToGroupMsg(group = group, recipient = member))
+        Full(member)
+      } else Failure("User " + member.email + " is already a member of this group!")
+    }
+  }
+
+  private def createGroupMapping(groupId: String){
     val root = c3.getFile("/").asDirectory
 
     root.createDirectory(groupId)
@@ -25,17 +67,18 @@ class GroupServiceImpl extends GroupService{
     }
   }
 
-  def removeGroupMapping(name: String){
+  private def removeGroupMapping(name: String){
     val root = c3.getFile("/").asDirectory
 
     def removeDirectory(dir: C3Directory) {
       for(child <- dir.children()){
         child match {
           case d: C3Directory => {
+            logger.debug("Removing directory " + d.fullname + " from group " + name)
             removeDirectory(d)
           }
           case f: C3File => {
-            System.out.println(f.fullname)
+            logger.debug("Removing file " + f.fullname + " from group " + name)
             c3.deleteFile(f.fullname)
           }
         }
@@ -47,32 +90,7 @@ class GroupServiceImpl extends GroupService{
       case Some(groupDir) => {
         removeDirectory(groupDir.asDirectory)
       }
-      case _ =>
-        throw new C3Exception("Group directory is not found!")
-    }
-  }
-
-  def createGroup(newGroup: Group, members: Iterable[User]): Group = {
-    val group = newGroup.saveMe()
-    try {
-      createGroupMapping(group.id.is.toString)
-    } catch {
-      case e: C3Exception => {
-        group.delete_! // rollback all changes
-        throw e
-      }
-    }
-    addUserGroup(group,members)
-    group
-  }
-
-  def addUserGroup(currentGroup:Group, members: Iterable[User]){
-    currentGroup.owner.foreach(owner => UserGroup.join(owner, currentGroup))
-    for {
-      member <- members
-    } {
-      UserGroup.join(member, currentGroup)
-      NotificationManager ! CreateNotification(AddedToGroupMsg(group = currentGroup, recipient = member))
+      case _ => throw new C3Exception("Group directory is not found!")
     }
   }
 }

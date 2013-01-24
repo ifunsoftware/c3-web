@@ -6,6 +6,7 @@ import net.liftweb.common.Logger
 import org.aphreet.c3.model.{Group, User, Message}
 import org.aphreet.c3.service.MessageStorageService
 import org.aphreet.c3.lib.DependencyFactory._
+import java.util
 
 /**
  * @author Dmitry Ivanov (mailto: id.ajantis@gmail.com)
@@ -18,7 +19,7 @@ class MessageServer(val group: Group) extends LiftActor with ListenerManager {
 
   override def lowPriority = {
     case MessageServerMsg(user, messageGroup, content, tags) if content.length > 0 =>
-      val msg = Message(group.id.is.toString, user.id.is.toString, content, tags)
+      val msg = Message(group.id.is.toString, user.id.is.toString, content, util.UUID.randomUUID().toString, tags)
       logger.debug("Received a message: " + msg + ". Saving...")
       msgService.save(msg)
       updateListeners()

@@ -16,8 +16,8 @@ import net.liftweb.common.Full
 import xml.Text
 
 /**
- * @author Dmitry Ivanov (mailto: Dmitry.Ivanov@reltio.com)
- *         Reltio, Inc.
+ * @author Dmitry Ivanov (mailto: id.ajantis@gmail.com)
+ *         iFunSoftware
  */
 class GroupListPage {
 
@@ -27,33 +27,35 @@ class GroupListPage {
 
   def listUser = {
     val users = User.findAll().filter(_.id.is != User.currentUser.open_!.id.is)
-      ".contUser" #> users.map( user =>{
-        ".contUser *" #> user.shortName &
-        ".contUser [value]" #> user.email
-      })
+    ".contUser" #> users.map( user =>{
+      ".contUser *" #> user.shortName &
+      ".contUser [value]" #> user.email
+    })
   }
-  //List Groups
+
   def list = {
     val groupList = User.currentUser.open_!.groups.toList
-    ".container_groups" #> groupList.map{ group:Group =>{
-      //Delete group
+
+    ".container_groups" #> groupList.map{ group:Group => {
+
       def deleteGroup(): JsCmd = {
         //TODO verify access user
-        groupService.removeGroupMapping(group.name.is)
-        //group.delete_!
-        JsCmds.Replace(group.id.is.toString, NodeSeq.Empty)
+        if(groupService.removeGroup(group)){
+          JsCmds.Replace(group.id.is.toString, NodeSeq.Empty)
+        } else JsCmds.Alert("Group is not removed! Please check logs for details")
       }
-      ".container_groups [id]"#> group.id.is&
-        ".container_groups *" #>
+
+      ".container_groups [id]"#> group.id.is &
+      ".container_groups *" #>
           ((n: NodeSeq) => SHtml.ajaxForm(
-            ("a *" #> group.name.is &
-              "a [href]" #>("/groups/"+group.id) andThen
+             ("a *" #> group.name.is &
+              "a [href]" #> ("/groups/"+group.id) andThen
               "* *" #> SHtml.memoize(f => f ++ SHtml.hidden(deleteGroup _))).apply(n)
           ))
     }
     }
   }
-  //Add new group
+
   def add = {
     var newGroup = Group.create
     var sameCategory = ""
@@ -87,224 +89,9 @@ class GroupListPage {
       }
     }
     "name=name" #> SHtml.onSubmit(newGroup.name(_))&
-    "name=description" #> SHtml.onSubmit(newGroup.description(_))&
-    "name=sameCategory" #> SHtml.onSubmit(sameCategory = _) &
-    "name=listusers" #> SHtml.onSubmit(listUserEmails = _) &
-    "type=submit" #> SHtml.onSubmitUnit(saveMe)
+      "name=description" #> SHtml.onSubmit(newGroup.description(_))&
+      "name=sameCategory" #> SHtml.onSubmit(sameCategory = _) &
+      "name=listusers" #> SHtml.onSubmit(listUserEmails = _) &
+      "type=submit" #> SHtml.onSubmitUnit(saveMe)
   }
 }
-//  object selectedResources extends RequestVar[scala.collection.mutable.Set[String]](scala.collection.mutable.Set())
-//  object actionCommand extends RequestVar[Command](DeleteSelectedResources)
-//
-//  def view(html: NodeSeq) : NodeSeq = {
-//
-//    val groupdir = "/"+S.param("groupdirectory").openOr("")
-//
-//    S.param("groupname") match {
-//      case Full(groupname) => {
-//        Group.find(By(Group.name,groupname)) match {
-//          case Full(group) => {
-//
-//            def doCommand(cmd: Command): JsCmd = {
-//              cmd match {
-//                case DeleteSelectedResources => deleteSelected
-//                case _ => Alert("Error: unknown action.")
-//              }
-//            }
-//
-//            def deleteSelected: JsCmd = {
-//              for (resName <- selectedResources){
-//                try {
-//                  c3.deleteFile(groupname+"/files/"+groupdir.tail + "/"+ resName)
-//                }
-//                catch {
-//                  case e: Exception => Alert(e.toString) & JsCmds.RedirectTo("")
-//                }
-//              }
-//              Alert("Selected resources were deleted: "+selectedResources.mkString(",")) & JsCmds.RedirectTo("")
-//            }
-//
-//            bind("group", html,
-//              "selectAction" -> SHtml.ajaxSelectObj[Command]( List((DeleteSelectedResources,"Delete selected")), Full(DeleteSelectedResources), (cmd: Command) =>
-//              { actionCommand.set(cmd); JsCmds.Noop }
-//              ),
-//              "name" -> group.name,
-//              "owner" -> {group.owner.obj.map(usr => usr.email.is) openOr "unknown"},
-//              "create_dir" -> ( (ns: NodeSeq) => new CreateDirectoryDialog().button(ns , (if(S.uri.contains("/group/")) Full(S.uri.split("/group/").last+"/") else Empty) ) ),
-//              "upload_file" -> ( (ns: NodeSeq) => new FileUploadDialog().button(ns )),/*  temp fix  , (if(S.uri.contains("/group/")) Full(S.uri.split("/group/").last+"/") else Empty) ) ), */
-//              "linkup" -> {
-//                val link = {
-//                  if(groupdir!="/") {
-//                    "/" + groupdir.split('/').tail.reverse.tail.reverse.mkString("/") match {
-//                      case "/" => ""
-//                      case s => s
-//                    }
-//                  }
-//                  else ""
-//                }
-//                //SHtml.link("/group/"+ groupname + link,()=>{},Text("../"))
-//                <a href={"/group/"+ groupname + "/files" + link}>../</a>
-//              },
-//              "doAction" -> ( (ns: NodeSeq) => SHtml.ajaxButton(ns.text, () => doCommand(actionCommand.is) ) ),
-//              "childs" -> {
-//
-//                (ns: NodeSeq) => group.getChildren(groupdir).sortWith(_.resourceType <= _.resourceType).flatMap(child => {
-//
-//                  val path = "/" + groupname+"/files/"+ {groupdir.tail match {
-//                    case "" => ""
-//                    case str => str + "/"
-//                  } } +  child.name
-//
-//                  val file = c3.getFile(path)
-//                  val created = file.date
-//
-//                  val url = "/group" + path
-//
-//                  bind("child",ns,
-//                    "name" -> <a href={url}>{child.name}</a>,
-//                    "type" -> child.resourceType,
-//                    "icon" -> { child.resourceType match {
-//                      case C3Resource.C3_FILE => <img src="/images/icons/document.gif"/>
-//                      case _ => <img src="/images/icons/folder.gif"/>
-//                    }},
-//                    "created" -> created.toString,
-//                    "delete" -> SHtml.ajaxButton("Delete",() => {
-//
-//                      try {
-//                        c3.deleteFile("/" + groupname+"/files/"+groupdir.tail + "/"+ child.name)
-//                        Alert("Resource "+ child.name +" deleted.")
-//                      }
-//                      catch {
-//                        case e: Exception => Alert(e.toString)
-//                      }
-//
-//                    } ),
-//                    "select" -> SHtml.ajaxCheckbox(false, { checked =>
-//                      if(checked)
-//                        selectedResources += child.name
-//                      else
-//                        selectedResources -= child.name
-//                      JsCmds.Noop
-//                    })
-//                  ) }
-//                ):NodeSeq
-//
-//              }
-//            )
-//          }
-//          case Empty => Text("Group "+groupname+" wasn't found in C3")
-//          case _ => Text("WTF with groupname?")
-//        }
-//      }
-//      case Empty => {
-//        Text("No group was choosed")
-//      }
-//      case _ => Text("Something bad has happend")
-//    }
-//
-//  }
-//
-//  def groupMenu(html: NodeSeq) : NodeSeq = {
-//
-//    S.param("groupname") match {
-//      case Full(name) => {
-//
-//        bind("group",html,
-//          "name" -> name,
-//          "overview_link" -> <a href={"/group/"+name}>Overview</a>,
-//          "files_link" -> <a href={"/group/"+name+"/files"}>Files</a>,
-//          "wiki_link" -> <a href={"/group/"+name+"/wiki"}>Wiki</a>,
-//          "admin_link" -> {Group.find(By(Group.name,name)) match {
-//            case Full(group) => {
-//              User.currentUser match {
-//                case Full(user) if(user.id.is == group.owner.is) => <a href={"/group/"+name+"/admin"}>Admin</a>
-//                case _ => NodeSeq.Empty
-//              }
-//            }
-//            case _ => NodeSeq.Empty
-//          } }
-//        )
-//      }
-//      case _ => NodeSeq.Empty
-//    }
-//  }
-//
-//  def groupOverview(html: NodeSeq) : NodeSeq = {
-//    S.param("groupname") match {
-//      case Full(name) => {
-//        Group.find(By(Group.name, name)) match {
-//          case Full(group) => {
-//            bind("group", html,
-//              "name" -> group.name,
-//              "description" -> group.description,
-//              "owner" -> {group.owner.obj.map(_.email.is).getOrElse("UNKNOWN")},
-//              "users" -> { (ns: NodeSeq) => group.users.flatMap(
-//                (user: User) =>
-//                  bind("user",ns,
-//                    "email"-> user.email
-//                  )
-//              ):NodeSeq }
-//
-//            )
-//          }
-//          case _ => NodeSeq.Empty
-//        }
-//      }
-//      case _ => NodeSeq.Empty
-//    }
-//  }
-//
-//
-//  def resourceProperties(html: NodeSeq) : NodeSeq = {
-//
-//    S.param("groupdirectory") match {
-//      case Full(groupDirName) if(!S.param("groupname").isEmpty) =>
-//
-//        val groupName = S.param("groupname").open_!
-//        bindNodeParameters(html, groupName, groupDirName)
-//
-//      case _ =>  // Directory name is not defined as parameter at the request
-//        S.param("groupfile") match {
-//
-//          case Full(groupFileName) if(!S.param("groupname").isEmpty) => {
-//            val groupName = S.param("groupname").open_!
-//            bindNodeParameters(html, groupName, groupFileName)
-//
-//          }
-//          case _ => NodeSeq.Empty   // File name is not defined as parameter at the request
-//        }
-//    }
-//  }
-//
-//  private def bindNodeParameters(html:NodeSeq, groupName:String, groupPath:String):NodeSeq = {
-//    try{
-//      val file = c3.getFile(pathInGroup(groupName, groupPath))
-//
-//      val md = file.metadata
-//      val createDate = file.date
-//      val tags = md.getOrElse("tags", "").split(",").toList
-//
-//      bind("currentResource", html,
-//        "name" -> groupPath,
-//        "owner" -> "owner2",
-//        "created" -> createDate.toString,             // TODO List(tags) is a STUB for tag display test
-//        "tags_list" -> {(ns: NodeSeq) => tags.flatMap( tag =>
-//          bind("tag", ns, "name" -> tag)) : NodeSeq
-//        }
-//      )
-//    } catch {
-//      case e => {
-//        S.error(e.toString)
-//        NodeSeq.Empty
-//      }
-//    }
-//  }
-//
-//  def pathInGroup(groupName:String, path:String):String = {
-//    "/" + groupName + "/files/" + path
-//  }
-//
-//}
-//
-//abstract class Command
-//case object DeleteSelectedResources extends Command

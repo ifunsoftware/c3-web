@@ -37,11 +37,19 @@ import junit.framework.TestCase
 import net.liftweb.http.{LiftRules, S, LiftSession}
 import net.liftweb.mapper._
 import org.aphreet.c3.model._
+import org.aphreet.c3.DBSetup
 
+class GroupFormTest extends TestCase {
 
-class GroupFormTest  extends TestCase {
+  private val session : LiftSession = new LiftSession("", StringHelpers.randomString(20), Empty)
+  private val groupsData: List[(String, String)] =
+    List(("group1", "Very interesting group"),
+         ("group2", "Politics and other boring stuff"),
+         ("group3", "Sports! Everything about it"),
+         ("group4", "Green gardens fans united"),
+         ("group5", "We love cats and hate dogs"))
 
-  val session : LiftSession = new LiftSession("", StringHelpers.randomString(20), Empty)
+  private var groups: List[Group] = Nil
 
   override def setUp() {
     // set up your db here
@@ -58,31 +66,37 @@ class GroupFormTest  extends TestCase {
       DB.defineConnectionManager(DefaultConnectionIdentifier, vendor)
     }
 
-    Schemifier.schemify(true, Schemifier.infoF _, User, Group, UserGroup)
+    DBSetup.setup()
   }
 
   override def tearDown(){
     // tear down your db here
-    User.currentUser.map (user => user.delete_!).openOr(false)
+    User.currentUser.map(user => user.delete_!).openOr(false)
+    Group.findAll().foreach(_.delete_!)
   }
 
-  private def GetGroups(){
+  private def getGroups(){
 
-    val xml = <ul>
-      <li><group:name/> - <group:owner/> - <group:delete/></li>
-    </ul>
+    val xml = {
+        <p class="groupsHeader">Groups</p>
+        <ul class="listGroup">
+          <li class="container_groups"><a></a><button class="delete_group">&times;</button></li>
+        </ul>
+    }
 
     val snippet = new GroupListPage()
     val output = snippet.list(xml)
 
-    println(output)
-    println("==================DO WE NEED THIS (" + getClass.getCanonicalName + ") TEST?========================")
-
-    //FIXME This test checks nothing now. Do we need it?
+    println(classOf[GroupListPage].getName + " result output: " + output)
 
     // Do verification of data returned; assert if something is amiss
-    //
-    // assert ( (output \\ "li").length ==  0)
+    assert ( (output \\ "li").length == groups.size)
+
+    (output \\ "a").foreach { node =>
+      assert ( groups.map(_.name.is).contains(node.text))
+      assert (node.attributes.get("href").isDefined)
+      assert ( groups.map(_.createLink).contains(node.attributes.get("href").get.text) )
+    }
   }
 
   def testValue(){
@@ -93,11 +107,22 @@ class GroupFormTest  extends TestCase {
       user.firstName("test")
       user.lastName("user")
       user.save
+
+      createGroups(user, groupsData)
+
       User.logUserIn(user)
       // Call the test to run
-      GetGroups()
+      getGroups()
       ()
     }
     ()
+  }
+
+  private def createGroups(owner: User, data: List[(String, String)]){
+    groups = data.map { case (name, description) =>
+      val group = Group.create.name(name).description(description).owner(owner).saveMe()
+      UserGroup.create.user(owner).group(group).save()
+      group
+    }
   }
 }

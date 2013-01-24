@@ -31,16 +31,15 @@
 package org.aphreet.c3.service
 
 import org.aphreet.c3.model.{User, Group}
+import net.liftweb.common.Box
 
 trait GroupService {
 
-  def createGroupMapping(name: String)
+  def addUsersToGroup(group: Group, members: Iterable[User]): Iterable[Box[User]]
 
-  def removeGroupMapping(name: String)
+  def createGroup(newGroup: Group, members: Iterable[User]): Box[Group]
 
-  def addUserGroup(currentGroup: Group, members: Iterable[User])
-
-  def createGroup(newGroup: Group, members: Iterable[User]): Group
+  def removeGroup(group: Group): Boolean
 }
 
 

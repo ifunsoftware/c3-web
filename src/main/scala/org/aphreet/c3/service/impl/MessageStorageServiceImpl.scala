@@ -11,6 +11,7 @@ import net.liftweb.util.Helpers
 import MessageStorageServiceImpl._
 import org.aphreet.c3.lib.metadata.Metadata._
 import Helpers._
+import java.util
 
 /**
  * Copyright iFunSoftware 2011
@@ -19,6 +20,7 @@ import Helpers._
 class MessageStorageServiceImpl extends MessageStorageService with C3Loggable{
 
   private val metaTags = Set(MSG_CREATOR_META)
+  private val MSG_FILE_PREFIX = "msg-"
 
   lazy val c3 = inject[C3System].open_!
 
@@ -39,7 +41,8 @@ class MessageStorageServiceImpl extends MessageStorageService with C3Loggable{
         Message(group.id.is.toString,
           Box(md.get(MSG_CREATOR_META)).openOr("N/A"),
           file.versions.last.date,
-          file.versions.last.getData.readContentAsString)
+          file.versions.last.getData.readContentAsString,
+          messageUUID(file.name))
       }
 
       messages.sortWith((cd1, cd2) => cd1.creationDate.after(cd2.creationDate))
@@ -53,7 +56,7 @@ class MessageStorageServiceImpl extends MessageStorageService with C3Loggable{
         root <- getGroupMessagesRoot(group)
     } yield {
       val tagsMap = buildTagsMap(CreatorTag(msg.author.map(_.id.is.toString).openOr("N/A")))
-      root.createFile(msg.creationDate.getTime.toString + "-" + Helpers.md5(msg.content).take(5), tagsMap, DataStream(msg.content))
+      root.createFile(messageFileName(msg), tagsMap, DataStream(msg.content))
       msg
     }
   }
@@ -63,7 +66,7 @@ class MessageStorageServiceImpl extends MessageStorageService with C3Loggable{
     val result = for{
       group <- msg.group
       root <- getGroupMessagesRoot(group)
-      msgFileName = msg.creationDate.getTime.toString + "-" + Helpers.md5(msg.content).take(5)
+      msgFileName = messageFileName(msg)
       file <- root.getChild(msgFileName)
     } yield {
       c3.deleteFile(file.fullname)
@@ -84,6 +87,9 @@ class MessageStorageServiceImpl extends MessageStorageService with C3Loggable{
     tags.map(t => t.name -> t.value).toMap
   }
 
+  protected def messageFileName(msg: Message) = MSG_FILE_PREFIX + msg.uuid
+
+  protected def messageUUID(fileName: String) = fileName.replace(MSG_FILE_PREFIX, "")
 }
 
 object MessageStorageServiceImpl{

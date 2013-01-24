@@ -103,10 +103,8 @@ class Group extends LongKeyedMapper[Group] with IdPK with ManyToMany{
 
 
   override def delete_! : Boolean = {
-    for(user <- users) {
-      UserGroup.find(By(UserGroup.user,user), By(UserGroup.group,this)).map(_.delete_!).openOr()
-    }
-    Category.find(By(Category.linkedGroup,this)).map(_.delete_!).openOr()
+    UserGroup.findAll(By(UserGroup.group, this)).foreach(_.delete_!)
+    Category.findAll(By(Category.linkedGroup,this)).foreach(_.delete_!)
     super.delete_!
   }
 

@@ -14,11 +14,7 @@ import com.ifunsoftware.c3.access.C3System
 import org.aphreet.c3.service.GroupService
 
 /**
- * Created with IntelliJ IDEA.
- * User: Serjk
- * Date: 19.01.13
- * Time: 20:49
- * To change this template use File | Settings | File Templates.
+ * @author Serjk (mailto: serjk91@gmail.com)
  */
 object GroupPageMembers extends AbstractGroupPageLoc[GroupPageData] with SuffixLoc {
   override val name = "Members"
@@ -29,8 +25,8 @@ object GroupPageMembers extends AbstractGroupPageLoc[GroupPageData] with SuffixL
 
   override def link = {
     new Link[GroupPageData](pathPrefix ++ pathSuffix){
-    override def pathList(value: GroupPageData): List[String] = pathPrefix ::: value.group.id.is.toString :: Nil ::: pathSuffix
-      }
+      override def pathList(value: GroupPageData): List[String] = pathPrefix ::: value.group.id.is.toString :: Nil ::: pathSuffix
+    }
   }
 }
 class GroupPageMembers(data: GroupPageData) extends GroupPageHelpers{
@@ -44,7 +40,7 @@ class GroupPageMembers(data: GroupPageData) extends GroupPageHelpers{
 
   def owner = {
     ".GroupOwner *" #> group.owner.obj.map(_.shortName).openOr("N/A")&
-    ".GroupOwner [href]" #> group.owner.obj.map(_.createLink)
+      ".GroupOwner [href]" #> group.owner.obj.map(_.createLink)
 
   }
   def listUserAdd = {
@@ -58,7 +54,7 @@ class GroupPageMembers(data: GroupPageData) extends GroupPageHelpers{
     else{
       ".contUser" #> users.map( user =>{
         ".contUser *" #> user.shortName &
-        ".contUser [value]" #> user.email
+          ".contUser [value]" #> user.email
       })
     }
 
@@ -68,12 +64,12 @@ class GroupPageMembers(data: GroupPageData) extends GroupPageHelpers{
     if (User.currentUser.open_!.email.is == group.owner.obj.map(_.email).open_!.is){
       ".ListGroupUser *" #> members.map(user =>{
         ".first_name *" #> user.firstName.is &
-        ".last_name *" #> user.lastName.is &
-        ".email *" #> user.email.is
+          ".last_name *" #> user.lastName.is &
+          ".email *" #> user.email.is
       })
     }else{
       ".ListGroupUser *" #> members.map(user =>{
-          ".first_name *" #> user.firstName.is &
+        ".first_name *" #> user.firstName.is &
           ".last_name *" #> user.lastName.is &
           ".email *" #> user.email.is &
           ".deluser *" #> NodeSeq.Empty
@@ -81,17 +77,24 @@ class GroupPageMembers(data: GroupPageData) extends GroupPageHelpers{
 
     }
   }
-   def addUserToGroup = {
-     var listUserEmails = ""
-     def saveMe(){
-       val userEmails = listUserEmails.split('%')
-       val members = userEmails.flatMap(User.findByEmail _)
-       groupService.addUserGroup(group,members)
-       S.notice("Users was edit")
-     }
 
-     "name=listusers" #> SHtml.onSubmit(listUserEmails = _) &
-     "type=submit" #> SHtml.onSubmitUnit(saveMe)
-   }
+  def addUserToGroup = {
+    var listUserEmails = ""
+    def saveMe(){
+      val userEmails = listUserEmails.split('%')
+      val members = userEmails.flatMap(User.findByEmail _)
+
+      val (added, notAdded) = groupService.addUsersToGroup(group,members).partition(_.isDefined)
+
+      if(!added.isEmpty)
+        S.notice("Users are added to group " + group.name.is + ": " + added.mkString(","))
+      if(!notAdded.isEmpty)
+        // normally shouldn't happen
+        S.error("Users are not added to group: " + group.name.is + ": " + notAdded.mkString(","))
+    }
+
+    "name=listusers" #> SHtml.onSubmit(listUserEmails = _) &
+    "type=submit" #> SHtml.onSubmitUnit(saveMe)
+  }
 
 }

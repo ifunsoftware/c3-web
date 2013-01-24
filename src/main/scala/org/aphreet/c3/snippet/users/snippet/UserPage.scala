@@ -10,8 +10,8 @@ import net.liftweb.util.Helpers._
 import org.aphreet.c3.snippet.users.UserPageData
 
 /**
- * @author Dmitry Ivanov (mailto: Dmitry.Ivanov@reltio.com)
- *         Reltio, Inc.
+ * @author Dmitry Ivanov (mailto: id.ajantis@gmail.com)
+ *         iFunSoftware
  */
 object UserPage extends ItemRewriteLoc[User, UserPageData] {
 
