@@ -1,14 +1,12 @@
-package org.aphreet.c3.service
+package org.aphreet.c3.service.notifications
 
 import org.aphreet.c3.model.{Group, Notification, NotificationType, User}
-import xml.NodeSeq
-import com.ifunsoftware.c3.access.fs.C3File
-import net.liftweb.http.S
 import org.aphreet.c3.model.{Group, User, NotificationType}
 import xml.NodeSeq
-import net.liftweb.http.S
-import net.liftweb.util.BindHelpers._
 import com.ifunsoftware.c3.access.fs.C3File
+import net.liftweb.http.S
+import net.liftweb.util.Helpers
+import Helpers._
 
 /**
  * Copyright iFunSoftware 2013

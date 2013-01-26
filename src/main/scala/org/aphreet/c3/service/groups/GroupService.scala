@@ -28,18 +28,20 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.aphreet.c3.service
+package org.aphreet.c3.service.groups
 
-trait UriService {
+import org.aphreet.c3.model.{User, Group}
+import net.liftweb.common.Box
 
-  def uriForWiki(group:String,  wiki:String):String = {
-    "/group/" + group + "/wiki/" + wiki
-  }
-  
-  def uriForPath(path:String):String = {
+trait GroupService {
 
-    val pathComponents = path.split("/")
+  def addUsersToGroup(group: Group, members: Iterable[User]): Iterable[Box[User]]
 
-    null
-  }
+  def createGroup(newGroup: Group, members: Iterable[User]): Box[Group]
+
+  def removeGroup(group: Group): Boolean
+
+  def removeUserFromGroup(group:Group, user:User):Boolean
 }
+
+

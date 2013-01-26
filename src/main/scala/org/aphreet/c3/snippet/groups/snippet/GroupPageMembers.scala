@@ -11,8 +11,8 @@ import org.aphreet.c3.util.CurrentUser
 import net.liftweb.http.{S, SHtml}
 import org.aphreet.c3.lib.DependencyFactory._
 import com.ifunsoftware.c3.access.C3System
-import org.aphreet.c3.service.GroupService
 import net.liftweb.http.js.{JsCmds, JsCmd}
+import org.aphreet.c3.service.groups.GroupService
 
 /**
  * @author Serjk (mailto: serjk91@gmail.com)

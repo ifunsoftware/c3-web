@@ -3,13 +3,13 @@ package org.aphreet.c3.loc
 import org.aphreet.c3.model.{Wiki, Group}
 import net.liftweb.common.{Full, Empty, Box}
 import be.devijver.wikipedia.{SmartLinkResolver, Parser, SmartLink}
-import org.aphreet.c3.service.WikiService
 import xml.XML
 import java.io.StringWriter
 import org.aphreet.c3.lib.wiki.C3HtmlVisitor
 import net.liftweb.http.{S, RequestVar}
 import org.aphreet.c3.lib.DependencyFactory._
 import net.liftweb.util.Helpers._
+import org.aphreet.c3.service.groups.wiki.WikiService
 
 /**
  * Copyright iFunSoftware 2011

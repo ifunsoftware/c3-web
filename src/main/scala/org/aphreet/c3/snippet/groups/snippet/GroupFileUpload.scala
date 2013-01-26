@@ -28,10 +28,7 @@ class GroupFileUpload(group: Group, currentPath: String) {
     var fileHolder: Box[FileParamHolder] = Empty
 
     def handleFile() = {
-      // Do something with the file.
-      // printBox(fileHolder)
       fileHolder.map { holder =>
-        //Alert("Oh, you upload file " + holder.fileName + ", yes?")
         uploadFile(holder, uploadFileToPath(URIUtil.decode(fullPath, "UTF-8"), holder.fileName))
         Alert("File is " + holder.fileName + " uploaded to path " + currentPath)
       } openOr {

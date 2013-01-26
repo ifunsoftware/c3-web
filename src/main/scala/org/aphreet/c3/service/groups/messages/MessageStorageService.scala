@@ -1,4 +1,4 @@
-package org.aphreet.c3.service
+package org.aphreet.c3.service.groups.messages
 
 import org.aphreet.c3.model.{User, Group, Message}
 import java.util

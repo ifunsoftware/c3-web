@@ -28,8 +28,19 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package org.aphreet.c3.service
+package org.aphreet.c3.service.groups.wiki
 
-trait FileService {
+import org.aphreet.c3.model.Wiki
+import net.liftweb.common.Box
+
+trait WikiService {
+
+  def getPage(group:String, name:String): Box[Wiki]
+
+  def createPage(group:String, page:Wiki)
+
+  def savePage(group:String, page:Wiki)
+
+  def getMetadata(group:String, name:String): Map[String, String]
 
 }

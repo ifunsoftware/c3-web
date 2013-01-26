@@ -2,7 +2,6 @@ package org.aphreet.c3.snippet.groups.snippet
 
 import com.ifunsoftware.c3.access.C3System
 import org.aphreet.c3.lib.DependencyFactory._
-import org.aphreet.c3.service.GroupService
 import net.liftweb.common.{Empty, Logger}
 import xml.{Text, NodeSeq}
 import org.aphreet.c3.model._
@@ -14,6 +13,7 @@ import org.aphreet.c3.snippet.{FileUploadDialog, CreateDirectoryDialog}
 import net.liftweb.http.js.JsCmds.Alert
 import net.liftweb.common.Full
 import xml.Text
+import org.aphreet.c3.service.groups.GroupService
 
 /**
  * @author Dmitry Ivanov (mailto: id.ajantis@gmail.com)

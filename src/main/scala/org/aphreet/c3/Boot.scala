@@ -15,6 +15,7 @@ import net.liftweb.widgets.uploadprogress._
 import net.liftweb.widgets.tablesorter.TableSorter
 import net.liftweb.widgets.autocomplete.AutoComplete
 import net.liftweb.widgets.menu.MenuWidget
+import service.metadata.MetadataService
 import snippet.categories.CategoriesSection
 import snippet.groups.GroupsSection
 import snippet.logging.LogLevel
@@ -24,6 +25,8 @@ import snippet.users.UsersSection
 import util.helpers.C3Streamer
 import util.{DefaultAuthDataLoader, TextileRenderer}
 import javax.mail.{Authenticator, PasswordAuthentication}
+import akka.actor.{Props => AkkaProps, ActorSystem}
+import net.liftweb.util.Props
 
 /**
  * A class that's instantiated early and run.  It allows the application
@@ -202,16 +205,9 @@ class Boot extends Bootable{
     })
 
     configMailer("smtp.gmail.com", "c3-project@ifunsoftware.com", "myverysecretpassword")
+    bootAkka()
 
     S.addAround(DB.buildLoanWrapper)
-
-    //    if(!Props.productionMode){
-    //      Category.findAll().foreach(_.delete_!)
-    //        (1 to 10).foreach{ i: Int => {
-    //        val cat = Category.create.name("Category" + i).saveMe()
-    //        (1 to 5).map(i => Tag.create.name("Tag" + i).category(cat).saveMe())
-    //      }}
-    //    }
 
   }
 
@@ -232,5 +228,11 @@ class Boot extends Bootable{
     Mailer.authenticator = Full(new Authenticator {
       override def getPasswordAuthentication = new PasswordAuthentication(user, password)
     })
+  }
+
+  private def bootAkka(){
+    // Create an Akka system
+    val system = ActorSystem("C3WebSystem")
+    val metadataService = system.actorOf(AkkaProps(new MetadataService), name = "MetadataService")
   }
 }

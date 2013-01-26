@@ -1,17 +1,16 @@
-package org.aphreet.c3.service.impl
+package org.aphreet.c3.service.groups.messages.impl
 
-import org.aphreet.c3.service.{MessageStorageException, MessageStorageService}
 import org.aphreet.c3.util.C3Loggable
 import org.aphreet.c3.model.{Group, Message}
 import org.aphreet.c3.lib.DependencyFactory._
+import MessageStorageServiceImpl._
+import org.aphreet.c3.lib.metadata.Metadata._
+import net.liftweb.util.Helpers
+import Helpers._
+import org.aphreet.c3.service.groups.messages.{MessageStorageException, MessageStorageService}
 import com.ifunsoftware.c3.access.{DataStream, C3System}
 import net.liftweb.common.Box
 import com.ifunsoftware.c3.access.fs.C3Directory
-import net.liftweb.util.Helpers
-import MessageStorageServiceImpl._
-import org.aphreet.c3.lib.metadata.Metadata._
-import Helpers._
-import java.util
 
 /**
  * Copyright iFunSoftware 2011

@@ -1,6 +1,7 @@
 package org.aphreet.c3.service
 
-import org.aphreet.c3.service.impl.{GroupServiceImpl, MessageStorageServiceImpl}
+import groups.impl.GroupServiceImpl
+import groups.messages.impl.MessageStorageServiceImpl
 import org.aphreet.c3.model.{Message, Group}
 import junit.framework.{Assert, TestCase}
 import net.liftweb.mapper._

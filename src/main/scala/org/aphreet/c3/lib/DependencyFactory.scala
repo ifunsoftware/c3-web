@@ -4,7 +4,10 @@ import net.liftweb._
 import http._
 import util._
 import org.aphreet.c3.apiaccess.C3
-import org.aphreet.c3.service.impl.{NotificationServiceImpl, MessageStorageServiceImpl, GroupServiceImpl, WikiServiceImpl}
+import org.aphreet.c3.service.groups.impl.GroupServiceImpl
+import org.aphreet.c3.service.groups.messages.impl.MessageStorageServiceImpl
+import org.aphreet.c3.service.groups.wiki.impl.WikiServiceImpl
+import org.aphreet.c3.service.notifications.impl.NotificationServiceImpl
 
 /**
  * A factory for generating new instances of Date.  You can create

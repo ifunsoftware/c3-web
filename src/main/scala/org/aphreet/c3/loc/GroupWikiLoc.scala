@@ -15,8 +15,10 @@ import net.liftweb.common.Full
 import net.liftweb.http.RewriteRequest
 import net.liftweb.http.ParsePath
 import xml.Text
+import org.aphreet.c3.service.groups.wiki.WikiService
+
 //import GroupLoc._
-import org.aphreet.c3.service.WikiService
+
 
 /**
  * Copyright iFunSoftware 2012

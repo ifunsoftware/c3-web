@@ -1,14 +1,14 @@
-package org.aphreet.c3.service.impl
+package org.aphreet.c3.service.groups.wiki.impl
 
-import org.aphreet.c3.service.WikiService
-import com.ifunsoftware.c3.access.C3System
-import org.apache.commons.httpclient.util.URIUtil
-import com.ifunsoftware.c3.access.fs.C3Directory
-import com.ifunsoftware.c3.access.DataStream
-import net.liftweb.common.{Box, Logger}
-import net.liftweb.util.Helpers._
 import org.aphreet.c3.model.Wiki
 import org.aphreet.c3.lib.DependencyFactory._
+import org.aphreet.c3.service.groups.wiki.WikiService
+import com.ifunsoftware.c3.access.{DataStream, C3System}
+import net.liftweb.common.{Box, Logger}
+import org.apache.commons.httpclient.util.URIUtil
+import net.liftweb.util.Helpers
+import Helpers._
+import com.ifunsoftware.c3.access.fs.C3Directory
 
 
 class WikiServiceImpl extends WikiService{

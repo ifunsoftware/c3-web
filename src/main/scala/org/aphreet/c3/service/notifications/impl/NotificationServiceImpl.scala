@@ -1,10 +1,9 @@
-package org.aphreet.c3.service.impl
+package org.aphreet.c3.service.notifications.impl
 
 import org.aphreet.c3.util.C3Loggable
 import org.aphreet.c3.model.{NotificationType, Notification, User}
+import org.aphreet.c3.service.notifications.{NotifyMsg, NotificationService}
 import net.liftweb.util.FieldError
-import org.aphreet.c3.service.{NotifyMsg, NotificationService}
-import xml.NodeSeq
 
 /**
  * Copyright iFunSoftware 2013

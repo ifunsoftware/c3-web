@@ -4,9 +4,9 @@ import net.liftweb.http.ListenerManager
 import net.liftweb.actor.LiftActor
 import net.liftweb.common.Logger
 import org.aphreet.c3.model.{Group, User, Message}
-import org.aphreet.c3.service.MessageStorageService
 import org.aphreet.c3.lib.DependencyFactory._
 import java.util
+import org.aphreet.c3.service.groups.messages.MessageStorageService
 
 /**
  * @author Dmitry Ivanov (mailto: id.ajantis@gmail.com)
