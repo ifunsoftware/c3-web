@@ -20,7 +20,7 @@ class SearchSnippet {
 
     def process(query: String){
       if (!query.isEmpty){
-        S.redirectTo("/search?query=" + queryParam(Nil,query))
+        S.redirectTo(urlEncode("/search?query=" + queryParam(Nil,query)))
       }
       else{
         S.notice("Empty search query")
