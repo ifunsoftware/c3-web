@@ -66,6 +66,7 @@ object FileUpload extends RestHelper with C3Loggable{
 
           val filePath: List[String] = currentPath match {
             case List("index") => Nil
+            case "groups" :: xs => xs
             case xs => xs
           }
 

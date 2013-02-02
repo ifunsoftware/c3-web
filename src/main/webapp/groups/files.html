@@ -10,33 +10,54 @@
                         <p>We are here <span class="current_path">/this/is/sample/dir/</span></p>
                         <div class="fs_toolbar well">
                             <img class="create_dir" src="/images/folder_add_48.png" title="Create directory"/>
-                            <a class="button" href="#upload_form" data-toggle="modal">
+                            <a class="button" href="#upload_form" id="upload_form_button">
                                 <img src="/images/box_upload_48.png" title="Upload files"/>
                             </a>
                             <tail>
-                                <link rel="stylesheet" type="text/css" href="/js/file-upload/upload.css"/>
-                                <script  src ="/js/file-upload/upload.js" type="text/javascript"></script>
+                                <link rel="stylesheet" type="text/css" href="/js/file-upload/css/upload.css">
+                                <script id="file-template" type="text/html">
+
+                                        <div class="lineContainer"><%=filename.length>30?filename.substr(0,30)+"...":filename%></div>
+                                        <div class="removebutton"><i class="icon-trash icon-black"></i></div>
+                                        <div class="barcontainer">
+                                            <div class="bartext"><%= status%></div>
+                                            <div class="bar" style="width: <%=loaded%>%;"></div>
+                                        </div>
+                                        <% if (hasError){ %>
+                                            <div class id=" error"><%=errortext%></div>
+                                        <% } %>
+                                        <textarea  hidden="true" class="area" placeholder = "Enter description" style="display: block;"><%=metadata%></textarea>
+
+                                </script>
+                                <script src="/js/lib/appinit.js" type="text/javascript"></script>
+                                <script src="/js/lib/underscore.js" type="text/javascript"></script>
+                                <script src="/js/lib/backbone.js" type="text/javascript"></script>
+                                <script  src ="/js/file-upload/js/logger.js" type="text/javascript"></script>
+                                <script  src ="/js/file-upload/js/module.js" type="text/javascript"></script>
+                                <script  src ="/js/file-upload/js/models.js" type="text/javascript"></script>
+                                <script  src ="/js/file-upload/js/collections.js" type="text/javascript"></script>
+                                <script  src ="/js/file-upload/js/views.js" type="text/javascript"></script>
                             </tail>
                         </div>
 
                         <table class="file-table">
                             <thead>
-                                <tr>
-                                    <td></td>
-                                    <td class="file-table-name"><b>Name</b></td>
-                                    <td class="file-table-owner"><b>Owner</b></td>
-                                    <td class="file-table-date"><b>Modify date</b></td>
-                                    <td><input type="checkbox" value="false" /></td>
-                                </tr>
+                            <tr>
+                                <td></td>
+                                <td class="file-table-name"><b>Name</b></td>
+                                <td class="file-table-owner"><b>Owner</b></td>
+                                <td class="file-table-date"><b>Modify date</b></td>
+                                <td><input type="checkbox" value="false" /></td>
+                            </tr>
                             </thead>
                             <tbody>
-                                <tr class="child">
-                                    <td><i class="icon"></i></td>
-                                    <td><a href="#"><span class="name"></span></a></td>
-                                    <td><a href="#">Aphreet</a></td>
-                                    <td class="file-table-date"><span class="created_date"></span></td>
-                                    <td><input type="checkbox" /></td>
-                                </tr>
+                            <tr class="child">
+                                <td><i class="icon"></i></td>
+                                <td><a href="#"><span class="name"></span></a></td>
+                                <td><a href="#">Aphreet</a></td>
+                                <td class="file-table-date"><span class="created_date"></span></td>
+                                <td><input type="checkbox" /></td>
+                            </tr>
                             </tbody>
                         </table>
 
@@ -45,17 +66,18 @@
             </div>
         </div>
     </div>
+
     <div id="upload_form" class='modal popup'>
-        <h1 class = "model-header  my_header">
+        <h1 class = "model-header">
             Uploading files
         </h1>
-        <div class="modal-body">
-            <input type="file" multiple="multiple" class='input'/>
-            <div class= 'dropzone'></div>
+        <div class="modal-body  my_body">
+            <input type="file" class='input' />
+            <div class='dropzone' id="dropzone"></div>
         </div>
-        <div class ="modal-footer">
-            <a id="close" href="#" class = 'cl btn  btn-danger'>Close</a>
-            <a id="upload"  href="#" class = 'cl btn btn-primary   '>Upload</a>
+        <div class ="model-footer">
+            <a id="close" href="#" class='cl btn  btn-danger'>Close</a>
+            <a id="upload"  href="#" class='cl btn btn-primary'>Upload</a>
         </div>
     </div>
 </div>

@@ -236,7 +236,13 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <nosuffix>true</nosuffix>
+                    <jswarn>false</jswarn>
+                    <disableOptimizations>false</disableOptimizations>
+                    <preserveAllSemiColons>false</preserveAllSemiColons>
+                    <excludes>
+                        <exclude>**/file-upload/lib/*.js</exclude>
+                        <exclude>**/file-upload/js/*.js</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
