@@ -28,7 +28,8 @@ Bundle-ClassPath: WEB-INF/classes,
  WEB-INF/lib/commons-httpclient-3.1.jar,
  WEB-INF/lib/commons-io-1.3.2.jar,
  WEB-INF/lib/commons-lang-2.4.jar,
- WEB-INF/lib/wikiparser-1.0.1.jar
+ WEB-INF/lib/wikiparser-1.0.1.jar,
+ WEB-INF/lib/akka-actor-2.0.jar
 Import-Bundle: javax.servlet;version="[2.5.0,3.1.0]",
  scala-library;version="[2.8.0,2.9.2]",
  org.slf4j.api,
