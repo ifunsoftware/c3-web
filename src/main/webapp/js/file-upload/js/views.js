@@ -127,7 +127,7 @@ App.uploadModule.Views.File = Backbone.View.extend({
     class : 'filecontainer',
     events :{
         "click .removebutton" : "destroy",
-        "click .lineContainer" : "toggleArea",
+        "click .toggler" : "toggleArea",
         "change .area": "updateMeta"
     },
     template :_.template($('#file-template').html()),

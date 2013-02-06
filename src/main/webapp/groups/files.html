@@ -10,9 +10,12 @@
                             <tail>
                                 <link rel="stylesheet" type="text/css" href="/js/file-upload/css/upload.css">
                                 <script id="file-template" type="text/html">
+                                    
+
+                                    <div class="toggler"><i class="icon-tags icon-black"></i></div>
 
                                     <div class="lineContainer"><%=filename.length>30?filename.substr(0,30)+"...":filename%></div>
-                                    <div class="removebutton"><i class="icon-trash icon-black"></i></div>
+                                    <div class="removebutton"><i class="icon-remove icon-black"></i></div>
                                     <div class="barcontainer">
                                         <div class="bartext"><%= status%></div>
                                         <div class="bar" style="width: <%=loaded%>%;"></div>
@@ -79,19 +82,19 @@
                             </div>
 
                         </div>
-                        <div id="upload_form" class='modal popup'>
-                            <h1 class = "model-header">
-                                Uploading files
-                            </h1>
-                            <div class="modal-body  my_body">
-                                <input type="file" class='input' />
-                                <div class='dropzone' id="dropzone"></div>
-                            </div>
-                            <div class ="model-footer">
-                                <a id="close" href="#" class='cl btn  btn-danger'>Close</a>
-                                <a id="upload"  href="#" class='cl btn btn-primary'>Upload</a>
-                            </div>
-                        </div>
+
+			<div id="upload_form" class='modal popup'>
+		            <h1 class = "modal-header">Uploading files</h1>
+		            <div class="modal-body  my_body">
+		                <input type="file" class='input' />
+		                <div class='dropzone' id="dropzone"></div>
+		            </div>
+		            <div class ="modal-footer">
+		                <a id="close" href="#" class='cl btn  btn-danger'>Close</a>
+		                <a id="upload"  href="#" class='cl btn btn-primary'>Upload</a>
+		            </div>
+		        </div>
+
                     </div>
                 </div>
             </div>
