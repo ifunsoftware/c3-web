@@ -16,6 +16,7 @@ import scala.Some
 import org.aphreet.c3.service.notifications.NotificationManagerProtocol.CreateNotification
 import org.aphreet.c3.service.notifications.AddedToGroupMsg
 import org.aphreet.c3.lib.NotificationManagerRef
+import java.lang.Exception
 
 class GroupServiceImpl extends GroupService with C3Loggable{
 
@@ -23,22 +24,23 @@ class GroupServiceImpl extends GroupService with C3Loggable{
 
   lazy val notificationManager = inject[NotificationManagerRef].open_!.actorRef
 
-  override def createGroup(newGroup: Group, members: Iterable[User],tags:String): Box[Group] = {
+  override def createGroup(newGroup: Group, members: Iterable[User], tags:String): Box[Group] = {
     val metadata = Map((TAGS_META -> tags.split(",").map(_.trim).mkString(",")))
     val group = newGroup.saveMe()
     try {
-      createGroupMapping(group.id.is.toString,metadata)
+      createGroupMapping(group.id.is.toString, metadata)
+      group.owner.foreach(owner => UserGroup.join(owner, group))
+      addUsersToGroup(group,members)
+      Full(group)
     } catch {
-      case e: C3Exception => {
+      case e: Exception => {
+        logger.error("Couldn't create group C3 FS mapping: " + newGroup.name.is)
         group.delete_! // rollback
         Failure("Couldn't create group C3 FS mapping", Full(e), Empty)
       }
     }
-    group.owner.foreach(owner => UserGroup.join(owner, group))
-    addUsersToGroup(group,members)
-    Full(group)
   }
-  override def createGroup(newGroup: Group,tags:String): Box[Group] = {
+  override def createGroup(newGroup: Group, tags:String): Box[Group] = {
     createGroup(newGroup, List(), tags)
   }
 
@@ -46,7 +48,7 @@ class GroupServiceImpl extends GroupService with C3Loggable{
     try {
       removeGroupMapping(group.id.is.toString)
     } catch {
-      case e: C3Exception => {
+      case e: Exception => {
         logger.error("Error while removing group mapping from C3: " + e.getMessage, e)
         false
       }
@@ -55,11 +57,11 @@ class GroupServiceImpl extends GroupService with C3Loggable{
     group.delete_!
   }
 
-  override  def removeUserFromGroup(group:Group, user:User) = {
+  override def removeUserFromGroup(group:Group, user:User) = {
     try{
       UserGroup.findAll(By(UserGroup.user, user),By(UserGroup.group, group)).foreach(_.delete_!)
     } catch {
-      case e: C3Exception => {
+      case e: Exception => {
         logger.error("Error while removing user" + e.getMessage, e)
         false
       }

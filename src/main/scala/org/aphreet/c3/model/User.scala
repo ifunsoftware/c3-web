@@ -7,13 +7,7 @@ import xml._
 import net.liftweb.http.js.JsCmds.FocusOnLoad
 import net.liftweb.util.Helpers._
 import net.liftweb.http.S._
-import net.liftweb.sitemap.Loc.LocGroup
-import xml.Text
-import net.liftweb.common.Full
 import net.liftweb.util.Mailer
-import net.liftweb.util.Mailer.{BCC, To, Subject, From}
-import java.nio.MappedByteBuffer
-import xml.Group
 import net.liftweb.util.Mailer.Subject
 import net.liftweb.sitemap.Loc.LocGroup
 import xml.Text
@@ -85,7 +79,8 @@ object User extends User with MetaMegaProtoUser[User]{
         </form>
       </div>)
   }
-  //форма восстановления пароля
+
+  // password recovery form
   override def passwordResetXhtml = {
     (<div class="forgot_password_form form-holder login-form well well_login">
       <form action={S.uri} method="POST" class="form">
@@ -125,7 +120,8 @@ object User extends User with MetaMegaProtoUser[User]{
           "submit" -> resetPasswordSubmitButton(S.?("set.password.button"), finishSet _))
       case _ => S.error(S.??("password.link.invalid")); S.redirectTo(homePage)
     }
-  //блок генерации письма
+
+  // password recovery email generation
   override def sendPasswordReset(email: String) {
     findUserByUserName(email) match {
       case Full(user) if user.validated_? =>
@@ -266,7 +262,7 @@ object User extends User with MetaMegaProtoUser[User]{
         </form>
       </div>)
   }
-  override  def changePassword = {
+  override def changePassword = {
       val user = currentUser.open_! // we can do this because the logged in test has happened
       var oldPassword = ""
       var newPassword: List[String] = Nil
@@ -374,8 +370,8 @@ class User extends MegaProtoUser[User] with ManyToMany {
     override def displayName = "Personal Essay"
   }
 
-  object groups extends MappedManyToMany(UserGroup, UserGroup.user, UserGroup.group, Group){
-    def toForm() : NodeSeq = {
+  object groups extends MappedManyToMany(UserGroup, UserGroup.user, UserGroup.group, org.aphreet.c3.model.Group){
+    def toForm: NodeSeq = {
       if(!this.toList.isEmpty) {
         {<ul>{
           for(group <- this.toList) yield

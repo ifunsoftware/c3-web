@@ -1,49 +1,92 @@
 <div class="lift:surround?with=default">
-    <div class="lift:bind-at?name=left-panel">
-        <div class="lift:SearchSnippet.categories">
-            <ul class="categories" role="menu" aria-labelledby="dLabel">
-                <li class="category_cnt dropdown-submenu">
-                    <div class="con_category" tabindex="-1">
-                        <div class="category_cont" >Categories</div>
-                        <a class="linkGroup" href="#">[+]</a>
-                    </div>
-                    <ul class="category_tags">
-                        <span class="label margn">Tags</span>
+
+    <lift:snippet type="SearchForm">
+
+        <div class="lift:bind-at?name=left-panel">
+            <head>
+                <link href="/css/search.css" type="text/css" rel="stylesheet"/>
+                <script type="text/javascript">
+                    $(document).ready(function(){
+                        $( '.root ul' ).hide();
+                        $( 'li.branch > a' ).prepend( '<i class="icon-chevron-up"></i>' );
+
+                        $( 'li.branch > a' ).click( function ( event ) {
+                            event.preventDefault();
+
+                            var leaves = $( this ).parent( 'li' ).children( 'ul' );
+
+                            if ( leaves.is( ':visible' ) ) {
+                                $( 'i.icon-chevron-down', this ).removeClass( 'icon-chevron-down' ).addClass( 'icon-chevron-up' );
+                                leaves.slideUp();
+                            }
+                            else {
+                                $( 'i.icon-chevron-up', this ).removeClass( 'icon-chevron-up' ).addClass( 'icon-chevron-down' );
+                                leaves.slideDown();
+                            }
+                        } );
+
+                        $( '.collapse-all' ).click( function ( event ) {
+                            event.preventDefault();
+                            $( '.root ul' ).slideUp();
+                            $( 'li.branch > a > i.icon-chevron-down' ).removeClass( 'icon-chevron-down' ).addClass( 'icon-chevron-up' );
+
+                        } );
+
+                        $( '.expand-all' ).click( function ( event ) {
+                            event.preventDefault();
+                            $( '.root ul' ).slideDown();
+                            $( 'li.branch > a > i.icon-chevron-up' ).removeClass( 'icon-chevron-up' ).addClass( 'icon-chevron-down' );
+
+                        } );
+
+                    });
+                </script>
+            </head>
+
+            <h3>Categories</h3>
+            <p>
+                <a href="#" class="btn btn-mini expand-all"><i class="icon-plus-sign"></i> Expand</a>
+                <a href="#" class="btn btn-mini collapse-all"><i class="icon-minus-sign"></i> Collapse</a>
+            </p>
+            <ul class="root nav nav-list affix-top">
+                <li class="branch category"><a href="#" class="name">Scala</a>
+                    <ul>
+                        <li class="tag"><a href="#" class="label btn-info name">Case classes</a></li>
                     </ul>
                 </li>
             </ul>
         </div>
-    </div>
-    <div class="lift:bind-at?name=content">
-        <div class="lift:SearchSnippet.result">
-            <div class="conteyner_result">
-                <a class="header_search"></a>
-                <div class="fragment_search">'You ought to be ashamed of yourself for asking such a simple question,' added the Gryphon; and then they both sat silent and looked at poor Alice, who felt ready to sink into the earth. At last the Gryphon said to the Mock Turtle, 'Drive on, old fellow! Don't be all day about it!' and he went on in these words:
-                    'Yes, we went to school in the sea, though you mayn't believe it—'
-                    'I never said I didn't!' interrupted Alice.
-                    'You did,' said the Mock Turtle.
+
+        <div class="lift:bind-at?name=content">
+            <h3 class="span10">Search</h3>
+            <div class="span4 search_form">
+                <div class="input-append">
+                    <input class="span6 search_query" type="text" placeholder="Enter a search query...">
+                    <button class="btn search_btn" type="submit"><i class="icon-search"></i></button>
                 </div>
-                <div>
-                    <span class="badge badge-success date_create">Posted 2012-08-02 20:47:04</span>
+                <div class="selected-tags-container span6">
+                    <ul id="selected_tags">
+                    </ul>
                 </div>
-                <hr/>
+            </div>
+
+            <div id="results" class="span10 search_results">
+                <div class="entry">
+                    <h4><a href="#" class="result_header">Some interesting file</a></h4>
+                    <p class="entry-datetime result_date">Feb 2, 2013</p>
+                    <p><a href="#" class="result_link">/Java Tuning/documentation/2.1/jvm_internals.pdf</a></p>
+                    <div class="result_content">Java IDL adds CORBA (Common Object Request Broker Architecture) capability to Java, providing...
+                    </div>
+                    <ul class="result_tags">
+                        <li class="tag">
+                            <a href="#" class="label label-info">pefr</a>
+                        </li>
+                    </ul>
+                </div>
 
             </div>
         </div>
-    </div>
-    <div class="lift:bind-at?name=categories_search">
-        <div class="lift:SearchSnippet.search">
-            <form class="lift:SearchSnippet.render?form=post form-search search_categories">
-                    <div class="input-append">
-                        <div class="text_size">
-                            <div class="flt">
-                            </div>
-                            <input name="tags" class="disp_none tags_input"/>
-                            <input name="query" type="text" class="span2 text_search" placeholder="Edit text..."/>
-                        </div>
-                        <button type="submit" class="btn btn_search">Search</button>
-                    </div>
-            </form>
-         </div>
-    </div>
+
+    </lift:snippet>
+
 </div>
