@@ -22,7 +22,7 @@
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
  * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, 
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+ * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES LOSS OF USE, DATA, OR PROFITS 
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
@@ -37,147 +37,138 @@ import java.io.Writer
 import org.apache.commons.lang.StringEscapeUtils
 import annotation.switch
 
-class WikiParser{
+class WikiParser
 
-}
-
-class C3HtmlVisitor(val writer:Writer, val resolver:SmartLinkResolver)
+class C3HtmlVisitor(val writer:Writer, val resolver:SmartLinkResolver) 
   extends HtmlVisitor(writer, resolver, new C3HtmlEncoder, true){
 
-  var inHeader = false;
-  var inImage = false;
+  var inHeader = false
+  var inImage = false
 
-
-
-  override def handleString(s:String) = {
-
-    if(inImage){
-      val params = s.split("\\|");
+  override def handleString(s: String) = {
+    if (inImage){
+      val params = s.split("\\|")
       if (params(0).matches("^[\\d]+px$")) {
-        output.append(" width=\"" + params(0) + "\"");
+        output.append(" width=\"" + params(0) + "\"")
       }
       if (params.length > 1) {
-        output.append(" alt=\"" + characterEncoder.encode(params(1))
-          + "\"");
+        output.append(" alt=\"" + characterEncoder.encode(params(1)) + "\"")
       }
-      output.append("/>");
-      inImage = false;
-    }else{
-
-      if(inHeader){
-        output.append(characterEncoder.encode(s));
-        output.append("\">");
-        inHeader = false;
+      output.append("/>")
+      inImage = false
+    } else {
+      if (inHeader){
+        output.append(characterEncoder.encode(s))
+        output.append("\">")
+        inHeader = false
       }
 
-      output.append(characterEncoder.encode(s));
+      output.append(characterEncoder.encode(s))
     }
   }
 
-  private def resolveSmartLink(s:String):SmartLink = {
-
+  private def resolveSmartLink(s: String): SmartLink = {
     val resolvedLink = smartLinkResolver.resolve(s)
 
     if(resolvedLink == null){
-      throw new Exception("SmartLinkResolver ["
-        + smartLinkResolver + "] could not resolved smart link ["
-        + s + "]!")
+      throw new Exception("SmartLinkResolver [" +
+        smartLinkResolver + "] could not resolved smart link [" +
+        s + "]!")
     }
 
     resolvedLink
   }
 
-  override def handleSmartLinkWithoutCaption(s:String) = {
+  override def handleSmartLinkWithoutCaption(s:String){
     val resolvedLink = resolveSmartLink(s)
 
     if(resolvedLink.isImage){
       output.append("<a href=\""
-        + characterEncoder.encode(resolvedLink.getResourceLink())
+        + characterEncoder.encode(resolvedLink.getResourceLink)
         + "\"><img src=\""
-        + characterEncoder.encode(resolvedLink.getUrl())
-        + "\"/></a>");
+        + characterEncoder.encode(resolvedLink.getUrl)
+        + "\"/></a>")
     }else{
       output.append("<a href=\""
-        + characterEncoder.encode(resolvedLink.getUrl()) + "\">"
-        + resolvedLink.getName() + "</a>");
+        + characterEncoder.encode(resolvedLink.getUrl) + "\">"
+        + resolvedLink.getName + "</a>")
     }
   }
 
-  override def startSmartLinkWithCaption(s:String) = {
+  override def startSmartLinkWithCaption(s: String){
     val resolvedLink = resolveSmartLink(s)
 
-    if(resolvedLink.isImage()){
+    if (resolvedLink.isImage){
       inImage = true
       output.append("<a href=\""
-        + characterEncoder.encode(resolvedLink.getResourceLink())
+        + characterEncoder.encode(resolvedLink.getResourceLink)
         + "\"><img src=\""
-        + characterEncoder.encode(resolvedLink.getUrl()) + "\"");
-    }else{
+        + characterEncoder.encode(resolvedLink.getUrl) + "\"")
+    } else {
       output.append("<a href=\""
-        + characterEncoder.encode(resolvedLink.getUrl()) + "\">");
+        + characterEncoder.encode(resolvedLink.getUrl) + "\">")
     }
   }
 
-  override def startDocument = {
+  override def startDocument(){
     output.append("<div class=\"wiki-content\">")
   }
 
-  override def endDocument = {
+  override def endDocument(){
     output.append("</div>")
-    output.flush
-    output.finished
+    output.flush()
+    output.finished()
   }
 
-  override def startHeading1 = {
+  override def startHeading1(){
     output.append("<h1 id\"")
     inHeader = true
   }
 
-  override def startHeading2 = {
+  override def startHeading2(){
     output.append("<h2 id=\"")
     inHeader = true
   }
 
-  override def startHeading3 = {
+  override def startHeading3(){
     output.append("<h3 id=\"")
     inHeader = true
   }
 
-  override def startHeading4 = {
+  override def startHeading4(){
     output.append("<h4 id=\"")
     inHeader = true
   }
 
-  override def startHeading5 = {
+  override def startHeading5(){
     output.append("<h5 id=\"")
     inHeader = true
   }
 
-  override def startHeading6 = {
+  override def startHeading6(){
     output.append("<h6 id=\"")
     inHeader = true
   }
 }
 
 class C3HtmlEncoder extends HtmlEncoder{
-
-  private def escape(source:String):String = {
-    if(source == null){
+  private def escape(source: String): String = {
+    if (source == null){
       null
-    }else{
+    } else {
       val builder = new StringBuilder
 
       for(i <- 0 to source.length - 1){
         val c = source.charAt(i)
         (c : @switch) match {
           case 34 =>
-            builder.append("&quot;")
+            builder.append("&quot")
           case 38 =>
-            builder.append("&amp;")
+            builder.append("&amp")
           case 60 =>
-            builder.append("&lt;")
+            builder.append("&lt")
           case 62 =>
-            builder.append("&gt;")
+            builder.append("&gt")
           case _ =>
             builder.append(c)
         }

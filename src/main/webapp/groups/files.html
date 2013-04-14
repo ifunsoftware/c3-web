@@ -180,14 +180,32 @@
                     </div>
 
                     <div id="upload_form" class="modal hide fade">
-                        <h1 class = "modal-header">Upload files</h1>
-                        <div class="modal-body  my_body">
-                            <input type="file" class='input' />
-                            <div class='dropzone' id="dropzone"></div>
+                        <h4 class = "modal-header">Upload files to directory</h4>
+                        <div id="file_upload">
+                            <form id="file_upload_form" action="/upload/file/path" method="POST" enctype="multipart/form-data">
+                                <div class="fileupload-buttonbar" style="margin: 10px;">
+                                                    <!-- The fileinput-button span is used to style the file input field as button -->
+                                                    <span class="btn btn-success fileinput-button">
+                                                        <i class="icon-plus icon-white"></i>
+                                                        <span>Add files...</span>
+                                                        <input type="file" name="files[]" multiple>
+                                                    </span>
+                                                    <!--<span class="fileinput-button">-->
+                                                      <!--<input type="file" name="files" multiple="multiple">-->
+                                                    <!--</span>-->
+                                </div>
+                            </form>
+                            <div class="fileupload-content">
+                                <table class="files">
+                                    <tbody></tbody>
+                                </table>
+                                <div class="fileupload-progressbar"></div>
+                            </div>
                         </div>
-                        <div class ="modal-footer">
-                            <a id="close" data-dismiss="modal" href="#" class='cl btn'>Cancel</a>
-                            <a id="upload"  href="#" class='cl btn btn-success'>Upload</a>
+                        <div class="modal-footer fileupload-buttonbar">
+                            <button id="file_upload_close_btn" type="button" data-dismiss="modal" class="btn btn-primary cancel">
+                                <span>Finish</span>
+                            </button>
                         </div>
                     </div>
 
@@ -235,37 +253,107 @@
                             <button type="button" onclick="" class="delete_selected_btn btn btn-danger">Delete</button>
                         </div>
                     </div>
-                    <div class="fs_toolbar">
-                        <tail>
-                            <link rel="stylesheet" type="text/css" href="/js/file-upload/css/upload.css">
-                            <script id="file-template" type="text/html">
+                    <tail>
+                        <script id="template-upload" type="text/x-jquery-tmpl">
+                            <tr class="template-upload{{if error}} ui-state-error{{/if}}">
+                                <td class="preview"></td>
+                                <td class="name">${name}</td>
+                                <td class="size">${sizef}</td>
+                                {{if error}}
+                                <td class="error" colspan="2">Error:
+                                    {{if error === 'maxFileSize'}}File is too big
+                                    {{else error === 'minFileSize'}}File is too small
+                                    {{else error === 'acceptFileTypes'}}Filetype not allowed
+                                    {{else error === 'maxNumberOfFiles'}}Max number of files exceeded
+                                    {{else}}${error}
+                                    {{/if}}
+                                </td>
+                                {{else}}
+                                <td class="progress"><div></div></td>
+                                <td class="start" style="min-width: 90px;">
+                                    <button type="submit" class="btn btn-primary start">
+                                        <i class="icon-white icon-upload"></i>
+                                        <span>Start</span>
+                                    </button>
+                                </td>
+                                {{/if}}
+                                <td class="cancel" style="min-width: 100px;">
+                                    <button type="reset" class="btn btn-warning cancel">
+                                        <i class="icon-ban-circle icon-white"></i>
+                                        <span>Cancel</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </script>
+                        <script id="template-download" type="text/x-jquery-tmpl">
+                            <tr class="template-download{{if error}} ui-state-error{{/if}}">
+                                {{if error}}
+                                <td></td>
+                                <td class="name">${name}</td>
+                                <td class="size">${sizef}</td>
+                                <td class="error" colspan="2">Error:
+                                    {{if error === 1}}File exceeds upload_max_filesize (php.ini directive)
+                                    {{else error === 2}}File exceeds MAX_FILE_SIZE (HTML form directive)
+                                    {{else error === 3}}File was only partially uploaded
+                                    {{else error === 4}}No File was uploaded
+                                    {{else error === 5}}Missing a temporary folder
+                                    {{else error === 6}}Failed to write file to disk
+                                    {{else error === 7}}File upload stopped by extension
+                                    {{else error === 'maxFileSize'}}File is too big
+                                    {{else error === 'minFileSize'}}File is too small
+                                    {{else error === 'acceptFileTypes'}}Filetype not allowed
+                                    {{else error === 'maxNumberOfFiles'}}Max number of files exceeded
+                                    {{else error === 'uploadedBytes'}}Uploaded bytes exceed file size
+                                    {{else error === 'emptyResult'}}Empty file upload result
+                                    {{else}}${error}
+                                    {{/if}}
+                                </td>
+                                {{else}}
+                                <td class="preview">
+                                    {{if thumbnail_url}}
+                                    <a href="${url}" target="_blank"><img src="${thumbnail_url}"></a>
+                                    {{/if}}
+                                </td>
+                                <td class="name">
+                                    <a href="${url}"{{if thumbnail_url}} target="_blank"{{/if}}>${name}</a>
+                                </td>
+                                <td class="size">${sizef}</td>
+                                <td colspan="2"></td>
+                                {{/if}}
+                                <td class="delete" style="min-width: 90px;">
+                                    <button type="button" data-type="${delete_type}" data-url="${delete_url}" class="btn btn-danger delete">
+                                        <i class="icon-trash icon-white"></i>
+                                        <span>Delete</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </script>
+                        <script>
+                            // <![CDATA[
 
-                                <div class="toggler"><i class="icon-tags icon-black"></i></div>
+                            $('#file_upload').fileupload( {
+                                form: "file_upload",
+                                autoUpload: false
+                            });
 
-                                <div class="lineContainer"><%=filename.length>30?filename.substr(0,30)+"...":filename%></div>
-                                <div class="removebutton"><i class="icon-remove icon-black"></i></div>
-                                <div class="barcontainer">
-                                    <div class="bartext"><%= status%></div>
-                                    <div class="bar" style="width: <%=loaded%>%;"></div>
-                                </div>
-                                <% if (hasError){ %>
-                                <div class id=" error"><%=errortext%></div>
-                                <% } %>
-                                <textarea  hidden="true" class="area" placeholder = "Enter description" style="display: block;"><%=metadata%></textarea>
+                            $('#upload_form').modal({
+                                backdrop: true,
+                                keyboard: true,
+                                show: false
+                            }).css({
+                                        // make width n * 10 % of screen
+                                        'width': function () {
+                                            return ($(document).width() * .7) + 'px';
+                                        },
+                                        // center model
+                                        'margin-left': function () {
+                                            return -($(this).width() / 2);
+                                        }
+                                    });
 
-                            </script>
-                            <script src="/js/lib/appinit.js" type="text/javascript"></script>
-                            <script src="/js/lib/underscore.js" type="text/javascript"></script>
-                            <script src="/js/lib/backbone.js" type="text/javascript"></script>
-                            <script  src ="/js/file-upload/js/logger.js" type="text/javascript"></script>
-                            <script  src ="/js/file-upload/js/module.js" type="text/javascript"></script>
-                            <script  src ="/js/file-upload/js/models.js" type="text/javascript"></script>
-                            <script  src ="/js/file-upload/js/collections.js" type="text/javascript"></script>
-                            <script  src ="/js/file-upload/js/views.js" type="text/javascript"></script>
-
-                        </tail>
-
-                    </div>
+                            // ]]>
+                        </script>
+                    </tail>
                 </div>
             </div>
         </div>

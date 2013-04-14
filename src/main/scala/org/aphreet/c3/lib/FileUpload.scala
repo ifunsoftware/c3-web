@@ -33,77 +33,120 @@ package org.aphreet.c3.lib
 import net.liftweb.http.rest._
 import net.liftweb.json._
 import JsonDSL._
-import net.liftweb.http.{FileParamHolder, S, InMemoryResponse, JsonResponse}
-import net.liftweb.json.JsonAST.JValue
-import net.liftweb.common.{Full, Logger, Box}
+import net.liftweb.http._
+import net.liftweb.common.Box
 import org.aphreet.c3.lib.DependencyFactory._
-import com.ifunsoftware.c3.access.{DataStream, C3System}
+import com.ifunsoftware.c3.access.{C3AccessException, DataStream, C3System}
 import com.ifunsoftware.c3.access.C3System._
 import org.aphreet.c3.lib.metadata.Metadata._
 import org.aphreet.c3.util.C3Loggable
 import org.aphreet.c3.model.User
-import net.liftweb.http.BadResponse
 import net.liftweb.util.Helpers
 import Helpers._
+import net.liftweb.http.InMemoryResponse
+import net.liftweb.common.Full
+import net.liftweb.http.BadResponse
 
 // for ajax file upload
 object FileUpload extends RestHelper with C3Loggable{
-  val c3 = inject[C3System].open_!
+  val c3 = inject[C3System].openOrThrowException("Cannot wire a C3 System")
 
   private val RegexGroupId = """.*groups/([^/]*)/.*""".r
+  private val isCallbackEnabled = false
 
   serve {
     case "upload" :: "file" :: currentPath Post req => {
-      logger.info("Uploaded files: " + req.uploadedFiles)
+      withCurrentUserAndGroupCtx(req, currentPath){
+        userGroupIds: UserGroupIds => {
 
-      // we imply that currently "metadata" is a list of tags
-      val currentUser = User.currentUser
-      val groupIdOpt = extractGroupId(currentPath)
+          val uploads = req.uploadedFiles
+          logger.info("Uploaded files: " + uploads)
 
-      tryo( (groupIdOpt.get, currentUser.map(_.id.is.toString).open_!) ) match {
-        case Full((groupId, userId)) => {
-          val fileMetadata: Map[String, String] = req param("metadata") map(s => Map((TAGS_META -> s),
-            (OWNER_ID_META -> userId), (GROUP_ID_META -> groupId))) openOr Map()
+          val fileMetadata: Map[String, String] =
+            Map((OWNER_ID_META -> userGroupIds.userId), (GROUP_ID_META -> userGroupIds.groupId))
+            //req param("metadata") map(s => Map((TAGS_META -> s))) openOr Map()
 
-          def removeTrailingIndex(path: List[String]) = path.reverse.dropWhile(_ == "index").reverse
-
-          val filePath: List[String] = removeTrailingIndex(currentPath) match {
-            case "groups" :: xs => xs
-            case xs => xs
-          }
+          val filePath = c3FilePath(currentPath)
 
           logger.info("Path to upload: " + filePath)
 
-          val ojv: Box[JValue] =
-            req.uploadedFiles.map(fph => {
-              uploadToC3(fph, filePath, fileMetadata)
-              ("name" -> fph.fileName) ~
-                ("type" -> fph.mimeType) ~
-                ("size" -> fph.file.length)
-            }).headOption
+          try{
+            val ojv: List[JObject] = uploads.map { fph =>
+                val url = removeTrailingIndex(currentPath).mkString("/", "/", "/") + fph.fileName
 
-          val ajv = ("name" -> "n/a") ~ ("type" -> "n/a") ~ ("size" -> 0L) ~ ("yak" -> "brrrr")
+                uploadToC3(fph, filePath, fileMetadata)
+                ("name" -> fph.fileName) ~
+                ("url" -> url) ~
+                ("sizef" -> fph.length) ~
+                ("delete_url" -> ("/delete/file" + url)) ~
+                ("delete_type" -> "DELETE")
+            }
 
-          val ret = ojv openOr ajv
-
-          // This is a tad bit of a hack, but we need to return text/plain, not JSON
-          val jr = JsonResponse(ret).toResponse.asInstanceOf[InMemoryResponse]
-          InMemoryResponse(jr.data, ("Content-Length", jr.data.length.toString) ::
-            ("Content-Type", "text/plain") :: S.getHeaders(Nil),
-            S.responseCookies, 200)
-        }
-        case _ => {
-          logger.error("Group id or current user id cannot be recognised. Path for upload: " + currentPath)
-          BadResponse()
+            val jr = JsonResponse(ojv).toResponse.asInstanceOf[InMemoryResponse]
+            InMemoryResponse(jr.data, ("Content-Length", jr.data.length.toString) ::
+              ("Content-Type", "text/plain") :: S.getHeaders(Nil),
+              S.responseCookies, 200)
+          } catch {
+            case e: C3AccessException => {
+              if (e.message.endsWith("already exists")) // that's ugly, need a proper cause from access api
+                errorResponse(uploads, 409, "File already exists")
+              else
+                BadResponse()
+            }
+          }
         }
       }
     }
+    case "delete" :: "file" :: currentPath Delete req => {
+      withCurrentUserAndGroupCtx(req, currentPath){
+        userGroupIds: UserGroupIds => {
+          val filePath = c3FilePath(currentPath)
+          logger.info("File to be deleted: " + removeTrailingIndex(currentPath).mkString("/", "/", ""))
+          deleteFromC3(filePath.init ::: reunite(filePath.last, req.path.suffix) :: Nil)
+          OkResponse()
+        }
+      }
+
+    }
   }
+
+  case class UserGroupIds(userId: String, groupId: String)
+
+  private def withCurrentUserAndGroupCtx(req: Req, currentPath: List[String])(block: UserGroupIds => LiftResponse): LiftResponse = {
+    val currentUser = User.currentUser
+    val groupIdOpt = extractGroupId(currentPath)
+
+    tryo( (groupIdOpt.get, currentUser.map(_.id.is.toString).open_!) ) match {
+      case Full((groupId, userId)) => {
+        block(UserGroupIds(userId, groupId))
+      }
+      case _ => {
+        logger.error("Group id or current user id cannot be recognised. Path for upload: " + currentPath)
+        BadResponse()
+      }
+    }
+  }
+
+  private def c3FilePath(currentPath: List[String]) = removeTrailingIndex(currentPath) match {
+    case "groups" :: xs => xs
+    case xs => xs
+  }
+
+  private def removeTrailingIndex(path: List[String]) = path.reverse.dropWhile(_ == "index").reverse
+
+  private def reunite(name: String, suffix: String) = if (suffix.isEmpty) name else name + "." + suffix
 
   private def uploadToC3(fph: FileParamHolder, filePath: List[String], metadata: Map[String, String]){
     logger info String.format("Uploading file %s to C3..", fph.name)
     c3.getFile(filePath.mkString("/", "/", "")).asDirectory.createFile(fph.fileName, metadata, DataStream(fph.file))
     logger info String.format("File %s is uploaded to C3!", fph.name)
+  }
+
+  private def deleteFromC3(filePath: List[String]){
+    val fileShortName = filePath.lastOption.getOrElse("<Unknown>")
+    logger info s"Removing file $fileShortName from C3.."
+    c3.deleteFile(filePath.mkString("/", "/", ""))
+    logger info s"File $fileShortName is removed from C3!"
   }
 
   private def extractGroupId(fullPath: List[String]): Box[String] = {
@@ -113,5 +156,32 @@ object FileUpload extends RestHelper with C3Loggable{
       groupId
     }
     id
+  }
+
+  private def errorResponse(fphs: List[FileParamHolder], errorCode: Int, errorMsg: String): LiftResponse = {
+    val ojv: List[JObject] = fphs.map { fph =>
+      ("name" -> fph.fileName) ~
+      ("sizef" -> fph.length) ~
+      ("error" -> errorMsg)
+    }
+
+    val jr = JsonResponse(ojv).toResponse.asInstanceOf[InMemoryResponse]
+    InMemoryResponse(jr.data,  ("Content-Length", jr.data.length.toString) ::
+      ("Content-Type", "text/plain") :: S.getHeaders(Nil),
+      S.responseCookies, errorCode)
+  }
+
+  def init(){
+    logger.info("Ajax file upload is initializing")
+    if (isCallbackEnabled){
+      logger.info("Callbacks are enabled for ajax file upload")
+      // rewrite so the rest-callback will be a param instead to be fired with LiftSession.runParams
+      LiftRules.statelessRewrite.append {
+        case RewriteRequest(ParsePath("upload" :: "file" :: callback :: Nil, "", true, _), _, _) =>
+          RewriteResponse("upload" :: "file" :: Nil, Map("callback" -> "_"))
+      }
+
+      LiftRules.dispatch.append(this)
+    }
   }
 }

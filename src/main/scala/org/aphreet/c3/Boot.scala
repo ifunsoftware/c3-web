@@ -209,18 +209,21 @@ class Boot extends Bootable{
 
     configMailer("smtp.gmail.com", "c3-project@ifunsoftware.com", "myverysecretpassword")
 
-    S.addAround(DB.buildLoanWrapper)
-    // create a super admin user
-    val users = User.find(By(User.email, "admin@admin.com"))
-    users.map(user =>{
-      if(!user.superUser){
-        user.superUser(true)
-        user.save
-        S.notice("Super user is Admin")
-      }
-    })
-  }
+    FileUpload.init()
 
+    LiftRules.progressListener = {
+      val opl = LiftRules.progressListener
+      val ret: (Long, Long, Int) => Unit =
+        (a, b, c) => {
+          // println("progress listener "+a+" plus "+b+" "+c)
+          // Thread.sleep(100) -- demonstrate slow uploads
+          opl(a, b, c)
+        }
+      ret
+    }
+
+    S.addAround(DB.buildLoanWrapper())
+  }
 
   /**
    * Force the request to be UTF-8

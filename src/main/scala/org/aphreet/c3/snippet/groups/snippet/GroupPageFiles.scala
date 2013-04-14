@@ -44,8 +44,10 @@ object GroupPageFiles extends AbstractGroupPageLoc[GroupPageFilesData] with Suff
       super.isAccessiblePage(page)
     }
   }
+
   // we don't use it here
   override def wrapItem(groupBox: Box[Group]): Box[GroupPageFilesData] = Empty
+
   def wrapItemWithPath(groupBox: Box[Group], path: List[String]) = groupBox.map(GroupPageFilesData(_, path))
 
   override def link = {
@@ -151,6 +153,8 @@ class GroupPageFiles(data: GroupPageFilesData) extends C3ResourceHelpers with Gr
       ".delete_selected_btn [onclick]" #> SHtml.ajaxInvoke(() =>
       { selectedResourcePaths.foreach(c3.deleteFile _); JsCmds.RedirectTo(currentPathLink) }) &
       ".file-view" #> NodeSeq.Empty &
+      "#file_upload_form [action]" #> ("/upload/file/groups/" + group.id.is + "/files" + data.currentAddress) &
+      "#file_upload_close_btn [onclick]" #> SHtml.ajaxInvoke(() => JsCmds.Reload) &
       "#new-directory" #> newDirectoryForm(d, currentPath = currentPathLink)
   }
 
