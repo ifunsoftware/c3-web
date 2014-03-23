@@ -67,9 +67,7 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
 
   def receive = {
     case CheckForMetadataUpdates =>
-      // query C3 for resources with special S4 meta processed tag
-      logger.debug("Querying C3 system for S4 processed resources...")
-      c3.query(Map(S4_PROCESSED_FLAG_META -> "true"), res => self ! ProcessC3Resource(res))
+      doQuery()
       scheduleNextQuery()
 
     case task @ ProcessC3Resource(res) =>
@@ -78,6 +76,10 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
       workers.forward(task)
   }
 
+  private[this] def doQuery(): Unit = {
+    // query C3 for resources with special S4 meta processed tag
+    logger.debug("Querying C3 system for S4 processed resources.")
+    c3.query(Map(S4_PROCESSED_FLAG_META -> "true"), res => self ! ProcessC3Resource(res))
   }
 
   private[this] def scheduleNextQuery() =
