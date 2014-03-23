@@ -50,12 +50,17 @@ import actor.{ActorRef, Actor, OneForOneStrategy}
 import actor.SupervisorStrategy.Resume
 
 class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggable {
+  import context.dispatcher
+
   private val c3 = inject[C3System].open_!
 
   val workersRouted =
     context.actorOf(
       actor.Props(new MetadataServiceWorker(c3, notificationManager)).withRouter(FromConfig()),
       name = "metadataServiceWorkerRoutedActor")
+  override def preStart() {
+    scheduleNextQuery()
+  }
 
   override def supervisorStrategy = OneForOneStrategy() {
     case _: Exception => Resume
@@ -67,6 +72,7 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
       // query C3 for resources with special S4 meta processed tag
       logger.debug("Querying C3 system for S4 processed resources...")
       c3.query(Map(S4_PROCESSED_FLAG_META -> "true"), res => self ! ProcessC3Resource(res))
+      scheduleNextQuery()
 
     case task @ ProcessC3Resource(res) =>
       logger.debug(s"C3 resource ${res.address} is retrieved. Forwarding for processing...")
@@ -76,8 +82,8 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
     case msg => logger.error("Unknown message is received: " + msg)
   }
 
-  import context.dispatcher // Use this Actors' Dispatcher as ExecutionContext
-  this.context.system.scheduler.schedule(5 minutes, 5 minutes, self, CheckForMetadataUpdates)
+  private[this] def scheduleNextQuery() =
+    context.system.scheduler.scheduleOnce(5 minutes, self, CheckForMetadataUpdates)
 }
 
 object MetadataServiceProtocol {
