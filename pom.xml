@@ -291,6 +291,9 @@
                         <configuration>
                             <alignParameters>true</alignParameters>
                             <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
+                            <indentPackageBlocks>true</indentPackageBlocks>
+                            <alignSingleLineCaseStatements>true</alignSingleLineCaseStatements>
+                            <doubleIndentClassDeclaration>true</doubleIndentClassDeclaration>
                         </configuration>
                     </execution>
                 </executions>
