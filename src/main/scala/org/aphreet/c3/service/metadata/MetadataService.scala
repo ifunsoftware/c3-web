@@ -62,9 +62,8 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
     scheduleNextQuery()
   }
 
-  override def supervisorStrategy = OneForOneStrategy() {
-    case _: Exception => Resume
-    case t            => super.supervisorStrategy.decider.apply(t)
+  override def supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 2, withinTimeRange = 1 minute) {
+    case _: Exception => Resume    
   }
 
   def receive = {
