@@ -54,13 +54,12 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
 
   private val c3 = inject[C3System].open_!
 
-  val workersRouted =
-    context.actorOf(
-      actor.Props(new MetadataServiceWorker(c3, notificationManager)).withRouter(FromConfig()),
-      name = "metadataServiceWorkerRoutedActor")
   override def preStart() {
     scheduleNextQuery()
   }
+
+  val workers = context.actorOf(Props(new MetadataServiceWorker(c3, notificationManager)).withRouter(FromConfig()),
+    name = "metadataServiceWorkerRoutedActor")
 
   override def supervisorStrategy = OneForOneStrategy(maxNrOfRetries = 2, withinTimeRange = 1 minute) {
     case _: Exception => Resume    
@@ -76,7 +75,8 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
     case task @ ProcessC3Resource(res) =>
       logger.debug(s"C3 resource ${res.address} is retrieved. Forwarding for processing...")
       // forward to actual workers to process
-      workersRouted forward task
+      workers.forward(task)
+  }
 
     case msg => logger.error("Unknown message is received: " + msg)
   }
