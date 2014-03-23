@@ -78,7 +78,6 @@ class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggab
       workers.forward(task)
   }
 
-    case msg => logger.error("Unknown message is received: " + msg)
   }
 
   private[this] def scheduleNextQuery() =
