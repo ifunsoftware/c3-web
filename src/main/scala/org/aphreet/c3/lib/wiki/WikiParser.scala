@@ -158,7 +158,7 @@ class C3HtmlEncoder extends HtmlEncoder {
     } else {
       val builder = new StringBuilder
 
-      for (i ← 0 to source.length - 1) {
+      for (i <- 0 to source.length - 1) {
         val c = source.charAt(i)
         (c: @switch) match {
           case 34 =>

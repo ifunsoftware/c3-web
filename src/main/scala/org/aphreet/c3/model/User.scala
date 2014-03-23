@@ -200,10 +200,10 @@ object User extends User with MetaMegaProtoUser[User] {
   }
   override protected def localForm(user: TheUserType, ignorePassword: Boolean, fields: List[FieldPointerType]): NodeSeq = {
     for {
-      pointer ← fields
-      field ← computeFieldFromPointer(user, pointer).toList
+      pointer <- fields
+      field <- computeFieldFromPointer(user, pointer).toList
       if field.show_? && (!ignorePassword || !pointer.isPasswordField_?)
-      form ← field.toForm.toList
+      form <- field.toForm.toList
     } yield <div class="div_text">{ form }</div>
   }
   override def signupFields: List[FieldPointerType] = List(firstName, lastName, email, password)
@@ -385,7 +385,7 @@ class User extends MegaProtoUser[User] with ManyToMany {
       if (!this.toList.isEmpty) {
         {
           <ul>{
-            for (group ← this.toList) yield (<li>{ Text(group.name.is).toSeq ++ SHtml.checkbox(true, (selected: Boolean) => if (!selected) UserGroup.find(By(UserGroup.group, group), By(UserGroup.user, thisuser)).open_!.delete_!).toSeq }</li>).flatten
+            for (group <- this.toList) yield (<li>{ Text(group.name.is).toSeq ++ SHtml.checkbox(true, (selected: Boolean) => if (!selected) UserGroup.find(By(UserGroup.group, group), By(UserGroup.user, thisuser)).open_!.delete_!).toSeq }</li>).flatten
           }</ul>
         }.flatten
       } else Text("No groups.")

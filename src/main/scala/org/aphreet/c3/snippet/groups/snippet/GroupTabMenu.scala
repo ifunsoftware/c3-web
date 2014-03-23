@@ -55,8 +55,8 @@ class GroupTabMenu {
     }
 
     val cssSel = for {
-      active ← activeTab ?~ "Active tab is undefined!"
-      groupId ← groupId ?~ "Current group id is undefined"
+      active <- activeTab ?~ "Active tab is undefined!"
+      groupId <- groupId ?~ "Current group id is undefined"
     } yield tabMenu(groupId, active)
 
     lazy val empty = "* *" #> NodeSeq.Empty

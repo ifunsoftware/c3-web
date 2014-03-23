@@ -18,8 +18,8 @@ class Breadcrumbs {
   def breadcrumb = {
     val allLocs: List[Loc[_]] =
       for {
-        currentLoc ← S.location.toList
-        loc ← currentLoc.breadCrumbs
+        currentLoc <- S.location.toList
+        loc <- currentLoc.breadCrumbs
       } yield loc
 
     breadcrumbsForLocs(allLocs)

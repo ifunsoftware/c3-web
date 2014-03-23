@@ -135,7 +135,7 @@ class Boot extends Bootable {
     // attempt to save the response as a downloaded file.
     LiftRules.responseTransformers.append {
       resp =>
-        (for (req ← S.request) yield {
+        (for (req <- S.request) yield {
           resp match {
             case InMemoryResponse(data, headers, cookies, code) if !req.uploadedFiles.isEmpty &&
               req.isIE &&

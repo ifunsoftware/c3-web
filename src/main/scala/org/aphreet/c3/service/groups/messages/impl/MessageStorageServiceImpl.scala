@@ -33,8 +33,8 @@ class MessageStorageServiceImpl extends MessageStorageService with C3Loggable {
       List()
     } else {
       val messages = for {
-        root ← messagesRoot.toList
-        file ← root.children(embedChildrenData = true, embedChildMetaData = metaTags).filter(!_.isDirectory).map(_.asFile)
+        root <- messagesRoot.toList
+        file <- root.children(embedChildrenData = true, embedChildMetaData = metaTags).filter(!_.isDirectory).map(_.asFile)
       } yield {
         val md = file.metadata
 
@@ -59,8 +59,8 @@ class MessageStorageServiceImpl extends MessageStorageService with C3Loggable {
   @throws(classOf[MessageStorageException])
   override def save(msg: Message): Box[Message] = {
     for {
-      group ← msg.group ?~ "Group message belongs to is not defined!"
-      root ← getGroupMessagesRoot(group)
+      group <- msg.group ?~ "Group message belongs to is not defined!"
+      root <- getGroupMessagesRoot(group)
     } yield {
       val tagsMap = buildTagsMap(CreatorTag(msg.author.map(_.id.is.toString).openOr("N/A")), MessageTags(msg.tags))
       root.createFile(messageFileName(msg), tagsMap, DataStream(msg.content))
@@ -71,10 +71,10 @@ class MessageStorageServiceImpl extends MessageStorageService with C3Loggable {
   @throws(classOf[MessageStorageException])
   override def delete(msg: Message): Boolean = {
     val result = for {
-      group ← msg.group
-      root ← getGroupMessagesRoot(group)
+      group <- msg.group
+      root <- getGroupMessagesRoot(group)
       msgFileName = messageFileName(msg)
-      file ← root.getChild(msgFileName)
+      file <- root.getChild(msgFileName)
     } yield {
       c3.deleteFile(file.fullname)
       msg

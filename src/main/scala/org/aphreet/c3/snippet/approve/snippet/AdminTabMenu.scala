@@ -42,7 +42,7 @@ class AdminTabMenu {
     }
 
     val cssSel = for {
-      active ← activeTab ?~ "Active tab is undefined!"
+      active <- activeTab ?~ "Active tab is undefined!"
     } yield tabMenu(active)
 
     lazy val empty = "* *" #> NodeSeq.Empty
