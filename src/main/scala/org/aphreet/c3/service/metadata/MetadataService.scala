@@ -32,22 +32,20 @@
 package org.aphreet.c3
 package service.metadata
 
-import com.ifunsoftware.c3.access.{C3Resource, C3System}
+import scala.concurrent.duration._
+
+import akka.actor.{ ActorRef, Actor, OneForOneStrategy, Props }
+import akka.actor.SupervisorStrategy.Resume
+import akka.routing.FromConfig
+
+import com.ifunsoftware.c3.access.{ C3Resource, C3System }
 import com.ifunsoftware.c3.access.C3System._
 
 import org.aphreet.c3.service.metadata.MetadataServiceProtocol._
 import org.aphreet.c3.lib.DependencyFactory._
 import org.aphreet.c3.util.C3Loggable
-import org.aphreet.c3.lib.metadata.Metadata
-import Metadata._
+import org.aphreet.c3.lib.metadata.Metadata._
 
-import scala.concurrent.duration._
-import scala.language.postfixOps
-
-import akka.actor
-import akka.routing.FromConfig
-import actor.{ActorRef, Actor, OneForOneStrategy}
-import actor.SupervisorStrategy.Resume
 
 class MetadataService(notificationManager: ActorRef) extends Actor with C3Loggable {
   import context.dispatcher
