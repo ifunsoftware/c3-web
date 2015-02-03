@@ -35,7 +35,7 @@ package util
 import net.liftweb.util.Helpers._
 import net.liftweb.common.Box
 
-import com.ifunsoftware.c3.access.{MetadataRemove, C3Resource}
+import com.ifunsoftware.c3.access.{ MetadataRemove, C3Resource }
 
 import org.aphreet.c3.lib.metadata.Metadata._
 
@@ -57,7 +57,8 @@ case class WebMetadata(res: C3Resource) {
   lazy val tagsRaw       : Box[String] = res.metadata.get(TAGS_META)
   lazy val isProcessedS4 : Boolean     = res.metadata.get(S4_PROCESSED_FLAG_META).flatMap(asBoolean).getOrElse(false)
 
-  def removeProcessedS4Flag(): Unit = res.update(MetadataRemove(List(S4_PROCESSED_FLAG_META)))
+  def metadata              = res.metadata
+  def removeProcessedS4Flag = res.update(MetadataRemove(List(S4_PROCESSED_FLAG_META)))
 }
 
 object WebMetadata {
