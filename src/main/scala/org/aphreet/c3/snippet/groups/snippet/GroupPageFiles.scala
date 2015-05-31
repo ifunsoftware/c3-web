@@ -214,7 +214,7 @@ class GroupPageFiles(data: GroupPageFilesData) extends C3ResourceHelpers
     JsCmds.SetHtml("right-box-head", <span>
                                        { file.name }
                                      </span>) &
-      JsCmds.SetHtml("description", <span>
+      JsCmds.SetHtml("description_box", <span>
                                       { ConvertHelper.ShortString(file.metadata.get(DESCRIPTION_META).getOrElse("")) }
                                     </span>) &
       JsCmds.SetHtml("edit_tags_form", <span>
