@@ -61,9 +61,9 @@ class UserListPage extends UserHelper with AdminPageHelper {
                   ".is_admin" #> NodeSeq.Empty &
                   ".enabled *" #> (if (user.enabled.is) "Yes" else "No") &
                   (if (user.id != current.id) {
-                    ".deluser *" #> SHtml.memoize(f => f ++ SHtml.hidden(deleteUser _)) &
-                      ".admin_checkbox " #> SHtml.ajaxCheckbox(user.superUser.is, setSuperAdmin(_)) &
-                      ".resetpwd *" #> SHtml.memoize(f => f ++ SHtml.hidden(resetPassword _))
+                    ".resetpwd [onclick]" #> SHtml.ajaxInvoke(() => resetPassword) &
+                      ".deluser [onclick]" #> SHtml.ajaxInvoke(() => deleteUser) &
+                      ".admin_checkbox " #> SHtml.ajaxCheckbox(user.superUser.is, setSuperAdmin(_))
                   } else {
                     ".admin_checkbox" #> NodeSeq.Empty &
                       ".deluser *" #> NodeSeq.Empty &

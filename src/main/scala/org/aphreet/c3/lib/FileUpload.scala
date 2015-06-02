@@ -39,7 +39,7 @@ import org.aphreet.c3.lib.DependencyFactory._
 import com.ifunsoftware.c3.access.{C3AccessException, DataStream, C3System}
 import com.ifunsoftware.c3.access.C3System._
 import org.aphreet.c3.lib.metadata.Metadata._
-import org.aphreet.c3.util.C3Loggable
+import org.aphreet.c3.util.{C3Exception, C3Loggable}
 import org.aphreet.c3.model.{Group, User}
 import net.liftweb.util.Helpers
 import Helpers._
@@ -51,7 +51,7 @@ import org.aphreet.c3.service.journal.EventType
 import org.aphreet.c3.util.helpers.FileTransferHelper
 
 // for ajax file upload
-object FileUpload extends RestHelper with C3Loggable{
+object FileUpload extends RestHelper with C3Loggable {
   val c3 = inject[C3System].openOrThrowException("Cannot wire a C3 System")
 
   private val RegexGroupId = """.*groups/([^/]*)/.*""".r
@@ -59,24 +59,30 @@ object FileUpload extends RestHelper with C3Loggable{
 
   serve {
     case "upload" :: "file" :: currentPath Post req => {
-      withCurrentUserAndGroupCtx(req, currentPath){
+      withCurrentUserAndGroupCtx(req, currentPath) {
 
-          val uploads = req.uploadedFiles
-          logger.info("Uploaded files: " + uploads)
+        val uploads = req.uploadedFiles
+        logger.info("Uploaded files: " + uploads)
 
-          val filePath = c3FilePath(currentPath)
+        val filePath = c3FilePath(currentPath)
 
-          logger.info("Path to upload: " + filePath)
-          userGroupIds: UserGroupIds => {
+        logger.info("Path to upload: " + filePath)
+        userGroupIds: UserGroupIds => {
 
-          try{
+          try {
             val ojv: List[JObject] = uploads.map { fph =>
               val url = removeTrailingIndex(currentPath).mkString("/", "/", "/") + fph.fileName
-              val description = req.param(s"description_${fph.fileName}") match {case Full(temp) => temp; case _ => ""}
+              val description = req.param(s"description_${fph.fileName}") match {
+                case Full(temp) => temp;
+                case _ => ""
+              }
 
-              val tags = req.param(s"tags_${fph.fileName}") match {case Full(temp) => temp; case _ => ""}
+              val tags = req.param(s"tags_${fph.fileName}") match {
+                case Full(temp) => temp;
+                case _ => ""
+              }
               val fileMetadata: Map[String, String] =
-                Map((OWNER_ID_META -> userGroupIds.userId), (GROUP_ID_META -> userGroupIds.groupId),(DESCRIPTION_META -> description),(TAGS_META -> tags))
+                Map((OWNER_ID_META -> userGroupIds.userId), (GROUP_ID_META -> userGroupIds.groupId), (DESCRIPTION_META -> description), (TAGS_META -> tags))
               //req param("metadata") map(s => Map((TAGS_META -> s))) openOr Map()
 
               uploadToC3(fph, filePath, fileMetadata)
@@ -103,7 +109,7 @@ object FileUpload extends RestHelper with C3Loggable{
       }
     }
     case "replace" :: "file" :: currentPath Post req => {
-      withCurrentUserAndGroupCtx(req, currentPath){
+      withCurrentUserAndGroupCtx(req, currentPath) {
         userGroupIds: UserGroupIds => {
 
           val uploads = req.uploadedFiles
@@ -114,24 +120,25 @@ object FileUpload extends RestHelper with C3Loggable{
 
           val oldFile = c3.getFile(oldFilePath.mkString("/", "/", ""))
           logger.info("Path to upload: " + filePath)
-            try{
-              val ojv: List[JObject] = uploads.map { fph =>
-                val url = removeTrailingIndex(currentPath).mkString("/", "/", "/") + fph.fileName
-                val fileMetadata: Map[String, String] =
-                  Map((OWNER_ID_META -> userGroupIds.userId), (GROUP_ID_META -> userGroupIds.groupId),(DESCRIPTION_META -> oldFile.metadata.get(DESCRIPTION_META).getOrElse("")),
-                    (TAGS_META -> oldFile.metadata.get(TAGS_META).getOrElse("")))
-                val group: Box[Group] = Group.findById(filePath.head)
-                val relativeFilePathString = filePath.drop(2) mkString "/"
-                FileTransferHelper.moveToTrashCan(oldFile.name, group.open_!, "/"+relativeFilePathString, true)
-                uploadToC3(fph, filePath.dropRight(1), fileMetadata)
-                ("name" -> fph.fileName) ~
-                  ("url" -> url) ~
-                  ("sizef" -> fph.length) ~
-                  ("delete_url" -> ("/delete/file" + url)) ~
-                  ("delete_type" -> "DELETE")
-              }
+          try {
+            val ojv: List[JObject] = uploads.map { fph =>
+              val url = removeTrailingIndex(currentPath).mkString("/", "/", "/") + fph.fileName
+              val fileMetadata: Map[String, String] =
+                Map((OWNER_ID_META -> userGroupIds.userId), (GROUP_ID_META -> userGroupIds.groupId), (DESCRIPTION_META -> oldFile.metadata.get(DESCRIPTION_META).getOrElse("")),
+                  (TAGS_META -> oldFile.metadata.get(TAGS_META).getOrElse("")))
+              val group = Group.findById(filePath.head).open_!
+              val relativeFilePathString = filePath.drop(2) mkString "/"
+              if (group.getFile(group.trashCanDirectory).openOr(null) == null) createTrashCan(group);
+              FileTransferHelper.moveToTrashCan(oldFile.name, group, "/" + relativeFilePathString, true)
+              uploadToC3(fph, filePath.dropRight(1), fileMetadata)
+              ("name" -> fph.fileName) ~
+                ("url" -> url) ~
+                ("sizef" -> fph.length) ~
+                ("delete_url" -> ("/delete/file" + url)) ~
+                ("delete_type" -> "DELETE")
+            }
 
-              val jr = JsonResponse(ojv).toResponse.asInstanceOf[InMemoryResponse]
+            val jr = JsonResponse(ojv).toResponse.asInstanceOf[InMemoryResponse]
             InMemoryResponse(jr.data, ("Content-Length", jr.data.length.toString) ::
               ("Content-Type", "text/plain") :: S.getHeaders(Nil),
               S.responseCookies, 200)
@@ -143,11 +150,11 @@ object FileUpload extends RestHelper with C3Loggable{
                 BadResponse()
             }
           }
-      }
+        }
       }
     }
     case "delete" :: "file" :: currentPath Delete req => {
-      withCurrentUserAndGroupCtx(req, currentPath){
+      withCurrentUserAndGroupCtx(req, currentPath) {
         userGroupIds: UserGroupIds => {
           val filePath = c3FilePath(currentPath)
           logger.info("File to be deleted: " + removeTrailingIndex(currentPath).mkString("/", "/", ""))
@@ -160,6 +167,28 @@ object FileUpload extends RestHelper with C3Loggable{
   }
 
   case class UserGroupIds(userId: String, groupId: String)
+
+  private def createTrashCan(group: Group): Unit = {
+    val root = c3.getFile("/").asDirectory
+    root.getChild(group.getId) match {
+      case Some(node) =>
+        val dir = node.asDirectory
+        dir.getChild("files") match {
+          case Some(node) =>
+            val files = node.asDirectory
+            val metadata = Map(OWNER_ID_META -> dir.metadata.get(OWNER_ID_META).getOrElse(User.id.is.toString),
+              GROUP_ID_META -> group.getId,
+              TAGS_META -> "Trash",
+              DESCRIPTION_META -> "",
+              ACL_META -> dir.metadata.get(ACL_META).getOrElse(""))
+            files.createDirectory(group.trashCanName, metadata)
+          case None => throw new C3Exception("Failed to create trash can for group " + group.getId)
+        }
+      case None => throw new C3Exception("Can't find group with id " + group.getId)
+    }
+  }
+
+
 
   private def withCurrentUserAndGroupCtx(req: Req, currentPath: List[String])(block: UserGroupIds => LiftResponse): LiftResponse = {
     val currentUser = User.currentUser

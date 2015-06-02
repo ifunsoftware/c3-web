@@ -215,8 +215,8 @@ class GroupPageFiles(data: GroupPageFilesData) extends C3ResourceHelpers
                                        { file.name }
                                      </span>) &
       JsCmds.SetHtml("description_box", <span>
-                                      { ConvertHelper.ShortString(file.metadata.get(DESCRIPTION_META).getOrElse("")) }
-                                    </span>) &
+                                          { ConvertHelper.ShortString(file.metadata.get(DESCRIPTION_META).getOrElse("")) }
+                                        </span>) &
       JsCmds.SetHtml("edit_tags_form", <span>
                                          { file.metadata.get(TAGS_META).map(_.split(",").mkString(", ")).getOrElse("") }
                                        </span>) &
@@ -743,6 +743,7 @@ class GroupPageFiles(data: GroupPageFilesData) extends C3ResourceHelpers
           TAGS_META -> tags.trim,
           DESCRIPTION_META -> description.trim,
           ACL_META -> currentDirectory.metadata.get(ACL_META).getOrElse(""))
+        name = name.replace(':', '-').replace('/', '-').replace('\\', '-');
         currentDirectory.createDirectory(name.trim, metadata)
         journalServer.foreach(_ ! JournalServerEvent(User.currentUserUnsafe, group, EventType.CreateResources, currentDirectory.fullname + name.trim))
         S.redirectTo(currentPath) // redirect on the same page
