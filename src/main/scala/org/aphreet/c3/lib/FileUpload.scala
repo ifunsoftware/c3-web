@@ -81,26 +81,36 @@ object FileUpload extends RestHelper with C3Loggable {
                 case Full(temp) => temp;
                 case _ => ""
               }
+
+              if (description == "") { throw new IllegalArgumentException("Description is empty") }
+              if (tags == "") { throw new Exception("Tags are empty") }
+
               val fileMetadata: Map[String, String] =
-                Map((OWNER_ID_META -> userGroupIds.userId), (GROUP_ID_META -> userGroupIds.groupId), (DESCRIPTION_META -> description), (TAGS_META -> tags))
-              //req param("metadata") map(s => Map((TAGS_META -> s))) openOr Map()
+                  Map((OWNER_ID_META -> userGroupIds.userId), (GROUP_ID_META -> userGroupIds.groupId), (DESCRIPTION_META -> description), (TAGS_META -> tags))
+                //req param("metadata") map(s => Map((TAGS_META -> s))) openOr Map()
+                uploadToC3(fph, filePath, fileMetadata)
+                ("name" -> fph.fileName) ~
+                  ("url" -> url) ~
+                  ("sizef" -> fph.length) ~
+                  ("delete_url" -> ("/delete/file" + url)) ~
+                  ("delete_type" -> "DELETE")
+              }
 
-              uploadToC3(fph, filePath, fileMetadata)
-              ("name" -> fph.fileName) ~
-                ("url" -> url) ~
-                ("sizef" -> fph.length) ~
-                ("delete_url" -> ("/delete/file" + url)) ~
-                ("delete_type" -> "DELETE")
-            }
+              val jr = JsonResponse(ojv).toResponse.asInstanceOf[InMemoryResponse]
+              InMemoryResponse(jr.data, ("Content-Length", jr.data.length.toString) ::
+                ("Content-Type", "text/plain") :: S.getHeaders(Nil),
+                S.responseCookies, 200)
 
-            val jr = JsonResponse(ojv).toResponse.asInstanceOf[InMemoryResponse]
-            InMemoryResponse(jr.data, ("Content-Length", jr.data.length.toString) ::
-              ("Content-Type", "text/plain") :: S.getHeaders(Nil),
-              S.responseCookies, 200)
           } catch {
             case e: C3AccessException => {
               if (e.message.endsWith("already exists")) // that's ugly, need a proper cause from access api
                 errorResponse(uploads, 409, "File already exists")
+              else
+                BadResponse()
+            }
+            case e: IllegalArgumentException => {
+              if (e.getMessage().endsWith("empty"))
+                errorResponse(uploads, 404, e.getMessage())
               else
                 BadResponse()
             }

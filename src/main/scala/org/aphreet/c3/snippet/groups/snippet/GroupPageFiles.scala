@@ -742,10 +742,11 @@ class GroupPageFiles(data: GroupPageFilesData) extends C3ResourceHelpers
           GROUP_ID_META -> data.group.getId,
           TAGS_META -> tags.trim,
           DESCRIPTION_META -> description.trim,
-          ACL_META -> currentDirectory.metadata.get(ACL_META).getOrElse(""))
-        name = name.replace(':', '-').replace('/', '-').replace('\\', '-');
-        currentDirectory.createDirectory(name.trim, metadata)
-        journalServer.foreach(_ ! JournalServerEvent(User.currentUserUnsafe, group, EventType.CreateResources, currentDirectory.fullname + name.trim))
+          ACL_META -> currentDirectory.metadata.get(ACL_META).getOrElse(""),
+          ORIGINAL_NAME_META -> name)
+        val normalizedName = normilizeFileName(name)
+        currentDirectory.createDirectory(normalizedName.trim, metadata)
+        journalServer.foreach(_ ! JournalServerEvent(User.currentUserUnsafe, group, EventType.CreateResources, currentDirectory.fullname + normalizedName.trim))
         S.redirectTo(currentPath) // redirect on the same page
       }
     }
@@ -754,6 +755,10 @@ class GroupPageFiles(data: GroupPageFilesData) extends C3ResourceHelpers
       "name=description" #> SHtml.onSubmit(description = _) &
       "name=tags" #> SHtml.onSubmit(tags = _) &
       "type=submit" #> SHtml.onSubmitUnit(createDirectory)
+  }
+
+  private def normilizeFileName(name: String): String = {
+    name.replace(':', '-').replace('/', '-').replace('\\', '-')
   }
 
   private def combineUserMetadata(metadata: scala.collection.Map[String, String]): Map[String, String] = {
