@@ -8,6 +8,7 @@ object Metadata {
   val DESCRIPTION_META = "x-c3-description"
   val CONTENT_TYPE = "content-type"
   val ACL_META = "x-c3-acl"
+  val ORIGINAL_NAME_META = "x-c3-original-name"
   val TAGS_META: String = "x-c3-tags"
   val MSG_CREATOR_META: String = "x-c3-msg-creator"
   val MSG_DATE_META: String = "x-c3-msg-date"
